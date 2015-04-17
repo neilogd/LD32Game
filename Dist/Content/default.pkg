@@ -1,0 +1,47 @@
+{
+
+	"resources" : [
+		/////////////////////////////////////////////////////////////// 
+		// Entities.
+		{
+			"name" : "SceneEntity",
+			"type" : "ScnEntity",
+
+			"components" : [
+				{
+					"type" : "GaSceneComponent"
+				},
+
+				{
+					"type" : "ScnDebugRenderComponent",
+					"noofvertices" : 65536,
+					"material" : "$(ScnMaterial:materials.debugrender)"
+				},
+
+				{
+					"name" : "CameraEntity",
+					"type" : "ScnEntity",
+
+					"components" : [
+						{
+							"type" : "GaCameraComponent"
+						},
+
+						{
+							"type" : "ScnViewComponent",
+							"x" : 0.0,
+							"y" : 0.0,
+							"width" : 1.0,
+							"height" : 1.0,
+							"near" : 1.0,
+							"far" : 4000.0,
+							"horizontalfov" : 0.75,
+							"verticalfov" : 0.0,
+							"rendermask" : 1
+						}
+					]
+				}
+			]
+		}
+	]
+}

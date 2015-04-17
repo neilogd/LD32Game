@@ -1,0 +1,33 @@
+{
+	"resources" : [
+		{
+			"type" : "ScnShader",
+			"name" : "default",
+			"source" : "Content/Engine/default.hlsl",
+
+			"includepermutations" : [
+				"RENDER_FORWARD",
+				"PASS_MAIN",
+				"LIGHTING_NONE"
+			],
+
+			"excludepermutations" : [
+			],
+
+			"codetypes"	: [
+				"D3D11_4_0_level_9_3"
+			],
+
+			"backendtypes" : [
+				"GLSL",
+				"GLSL_ES"
+			],
+
+			"entrypoints"		: {
+				"vertex" : "vertexMain",
+				"pixel" : "pixelMain"
+			}
+		}
+	]
+}
+
