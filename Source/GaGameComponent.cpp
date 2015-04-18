@@ -111,6 +111,7 @@ void GaGameComponent::update( BcF32 Tick )
 
 				if( ActionID != BcErrorCode )
 				{
+					PSY_LOG( "Sending action." );
 					GaUnitActionEvent Event;
 					Event.SourceUnit_ = SelectedUnit_;
 					Event.TargetUnit_ = ClickedUnit;

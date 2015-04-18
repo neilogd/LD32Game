@@ -1,12 +1,10 @@
 #pragma once
 #include "Psybrus.h"
-#include "System/Scene/Physics/ScnPhysicsWorldComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // GaAsteroidFieldComponent
 class GaAsteroidFieldComponent:
-	public ScnComponent,
-	public ScnIPhysicsWorldUpdate
+	public ScnComponent
 {
 public:
 	REFLECTION_DECLARE_DERIVED( GaAsteroidFieldComponent, ScnComponent );
@@ -15,7 +13,6 @@ public:
 	virtual ~GaAsteroidFieldComponent();
 
 	void update( BcF32 Tick ) override;
-	void onPhysicsUpdate( BcF32 Tick ) override;
 
 	void onAttach( ScnEntityWeakRef Parent ) override;
 	void onDetach( ScnEntityWeakRef Parent ) override;

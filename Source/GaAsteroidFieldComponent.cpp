@@ -94,13 +94,6 @@ void GaAsteroidFieldComponent::update( BcF32 Tick )
 		RsColour::RED,
 		0 );
 
-	Super::update( Tick );
-}
-
-//////////////////////////////////////////////////////////////////////////
-// onPhysicsUpdate
-void GaAsteroidFieldComponent::onPhysicsUpdate( BcF32 Tick )
-{
 	// Check if we need to move any to other top/bottom side,
 	// or constrain them to the width.
 	for( auto Asteroid : Asteroids_ )
@@ -156,6 +149,8 @@ void GaAsteroidFieldComponent::onPhysicsUpdate( BcF32 Tick )
 #endif
 		}
 	}
+
+	Super::update( Tick );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -211,10 +206,6 @@ void GaAsteroidFieldComponent::onAttach( ScnEntityWeakRef Parent )
 			} );
 	}
 
-	auto World = Parent->getComponentAnyParentByType< ScnPhysicsWorldComponent >();
-	BcAssert( World );
-	World->registerWorldUpdateHandler( this );
-
 	Super::onAttach( Parent );
 }
 
@@ -222,11 +213,6 @@ void GaAsteroidFieldComponent::onAttach( ScnEntityWeakRef Parent )
 // onDetach
 void GaAsteroidFieldComponent::onDetach( ScnEntityWeakRef Parent )
 {
-	auto World = Parent->getComponentAnyParentByType< ScnPhysicsWorldComponent >();
-	if( World )
-	{
-		World->deregisterWorldUpdateHandler( this );
-	}
 	Super::onDetach( Parent );
 }
 

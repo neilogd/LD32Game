@@ -5,6 +5,7 @@
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Physics/ScnPhysicsRigidBodyComponent.h"
 
+#include "Base/BcMath.h"
 #include "Base/BcRandom.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -53,13 +54,6 @@ GaMinerComponent::~GaMinerComponent()
 // update
 void GaMinerComponent::update( BcF32 Tick )
 {
-	Super::update( Tick );
-}
-
-//////////////////////////////////////////////////////////////////////////
-// onPhysicsUpdate
-void GaMinerComponent::onPhysicsUpdate( BcF32 Tick )
-{
 	switch( State_ )
 	{
 	case State::IDLE:
@@ -70,7 +64,8 @@ void GaMinerComponent::onPhysicsUpdate( BcF32 Tick )
 
 	case State::MINING:
 		{
-			TargetPosition_ = Target_->getParentEntity()->getLocalPosition() + MaVec3d( 0.0f, 8.0f, 0.0f );
+			auto TargetRigidBody = Target_->getComponentByType< ScnPhysicsRigidBodyComponent >();
+			TargetPosition_ = TargetRigidBody->getPosition() + MaVec3d( BcCos( CirclingTimer_ ), 1.0f, BcSin( CirclingTimer_ ) ) * 2.5f;
 		}
 		break;
 
@@ -79,13 +74,57 @@ void GaMinerComponent::onPhysicsUpdate( BcF32 Tick )
 
 		}
 		break;
+
+	case State::RETURNING:
+		{
+			auto TargetRigidBody = Target_->getComponentByType< ScnPhysicsRigidBodyComponent >();
+			TargetPosition_ = TargetRigidBody->getPosition() + MaVec3d( 0.0f, 3.0f, 0.0f );
+		}
+		break;
 	}
 
 	// Move to target position.
 	if( Target_ != nullptr )
 	{
-		auto RigidBody = Target_->getComponentByType< ScnPhysicsRigidBodyComponent >();
+		auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
 		auto Position = RigidBody->getPosition();
+
+		auto Displacement = TargetPosition_ - Position;
+
+		PSY_LOG( "Dis: %f, %f. Pos: %f, %f. Tar: %f, %f",
+			Displacement.x(),
+			Displacement.z(),
+			Position.x(),
+			Position.z(),
+			TargetPosition_.x(),
+			TargetPosition_.z() );
+
+		if( Displacement.magnitude() > 2.0f )
+		{
+			auto ForceAmount = Displacement.normal() * MaxForce_;
+			PSY_LOG( "APPLYING! %f, %f, %f (%f)", ForceAmount.x(), ForceAmount.y(), ForceAmount.z(), ForceAmount.magnitude() );
+
+			RigidBody->applyCentralForce( ForceAmount );
+
+			ScnDebugRenderComponent::pImpl()->drawLine( 
+				Position,
+				Position + ForceAmount * 0.025f,
+				RsColour::RED,
+				0 );
+		}
+
+		if( RigidBody->getLinearVelocity().magnitude() > MaxVelocity_ ||
+			Displacement.magnitude() < 2.0f )
+		{
+			RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * 0.9f );
+		}
+		RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * 0.99f );
+	}
+
+	CirclingTimer_ += Tick;
+	if( CirclingTimer_ > BcPIMUL2 )
+	{
+		CirclingTimer_ -= BcPIMUL2;
 	}
 }
 
@@ -93,10 +132,6 @@ void GaMinerComponent::onPhysicsUpdate( BcF32 Tick )
 // onAttach
 void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 {
-	auto World = Parent->getComponentAnyParentByType< ScnPhysicsWorldComponent >();
-	BcAssert( World );
-	World->registerWorldUpdateHandler( this );
-
 	// Mine.
 	Parent->subscribe( 0, this,
 		[ this ]( EvtID, const EvtBaseEvent& BaseEvent )
@@ -104,6 +139,9 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 			const auto& Event = BaseEvent.get< GaUnitActionEvent >();
 
 			PSY_LOG( "GaMinerComponent: Mine event" );
+			State_ = State::MINING;
+
+			Target_ = Event.TargetUnit_;
 
 			return evtRET_PASS;
 		} );
@@ -115,17 +153,23 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 			const auto& Event = BaseEvent.get< GaUnitActionEvent >();
 
 			PSY_LOG( "GaMinerComponent: Accident event" );
+			State_ = State::ACCIDENTING;
+
+			Target_ = Event.TargetUnit_;
 
 			return evtRET_PASS;
 		} );
 
 	// Return.
-	Parent->subscribe( 1, this,
+	Parent->subscribe( 2, this,
 		[ this ]( EvtID, const EvtBaseEvent& BaseEvent )
 		{
 			const auto& Event = BaseEvent.get< GaUnitActionEvent >();
 
 			PSY_LOG( "GaMinerComponent: Return event" );
+			State_ = State::RETURNING;
+
+			Target_ = Event.TargetUnit_;
 
 			return evtRET_PASS;
 		} );
@@ -140,10 +184,5 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 // onDetach
 void GaMinerComponent::onDetach( ScnEntityWeakRef Parent )
 {
-	auto World = Parent->getComponentAnyParentByType< ScnPhysicsWorldComponent >();
-	if( World )
-	{
-		World->deregisterWorldUpdateHandler( this );
-	}
 	Super::onDetach( Parent );
 }

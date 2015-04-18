@@ -20,7 +20,10 @@
 				},
 
 				{
-					"type" : "GaMinerComponent"
+					"type" : "GaMinerComponent",
+
+					"maxvelocity" : 10.0,
+					"maxforce" : 10.0
 				},
 
 				{
