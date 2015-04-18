@@ -31,6 +31,7 @@ private:
 	BcF32 Width_;
 	BcF32 Height_;
 	BcF32 Depth_;
+	BcF32 Margin_;
 
 	std::vector< ScnEntity* > Asteroids_;
 };

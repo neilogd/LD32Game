@@ -25,6 +25,7 @@ void GaAsteroidFieldComponent::StaticRegisterClass()
 		new ReField( "Width_", &GaAsteroidFieldComponent::Width_, bcRFF_IMPORTER ),
 		new ReField( "Height_", &GaAsteroidFieldComponent::Height_, bcRFF_IMPORTER ),
 		new ReField( "Depth_", &GaAsteroidFieldComponent::Depth_, bcRFF_IMPORTER ),
+		new ReField( "Margin_", &GaAsteroidFieldComponent::Margin_, bcRFF_IMPORTER ),
 
 		new ReField( "Asteroids_", &GaAsteroidFieldComponent::Asteroids_, bcRFF_TRANSIENT ),
 	};
@@ -43,7 +44,8 @@ GaAsteroidFieldComponent::GaAsteroidFieldComponent():
 	MaxVelocity_( 1.0f ),
 	Width_( 32.0f ),
 	Height_( 32.0f ),
-	Depth_( 1.0f )
+	Depth_( 1.0f ),
+	Margin_( 1.0f )
 {
 
 }
@@ -81,6 +83,17 @@ void GaAsteroidFieldComponent::update( BcF32 Tick )
 		RsColour::GREEN,
 		0 );
 
+	ScnDebugRenderComponent::pImpl()->drawLine( 
+		MaVec3d( -Width_, 0.0f, -( Height_ + Margin_ ) ),
+		MaVec3d(  Width_, 0.0f, -( Height_ + Margin_ ) ),
+		RsColour::RED,
+		0 );
+	ScnDebugRenderComponent::pImpl()->drawLine( 
+		MaVec3d( -Width_, 0.0f,  ( Height_ + Margin_ ) ),
+		MaVec3d(  Width_, 0.0f,  ( Height_ + Margin_ ) ),
+		RsColour::RED,
+		0 );
+
 	Super::update( Tick );
 }
 
@@ -96,15 +109,23 @@ void GaAsteroidFieldComponent::onPhysicsUpdate( BcF32 Tick )
 		auto Position = RigidBody->getPosition();
 
 
-		if( Position.z() < -Height_ )
+		if( Position.z() < -( Height_ + Margin_ ) )
 		{
-			RigidBody->translate( MaVec3d( 0.0f, 0.0f, Height_ * 1.99f ) );
+			MaVec3d NewPosition = MaVec3d(
+				BcRandom::Global.randRealRange( -Width_, Width_ ),
+				0.0f,
+				Height_ - 0.05f );
+			RigidBody->translate( -Position + NewPosition );
 
 			RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * MaVec3d( 0.0f, 0.0f, 1.0f ) );
 		}
-		else if( Position.z() > Height_ )
+		else if( Position.z() > ( Height_ + Margin_ ) )
 		{
-			RigidBody->translate( MaVec3d( 0.0f, 0.0f, -Height_ * 1.99f ) );
+			MaVec3d NewPosition = MaVec3d(
+				BcRandom::Global.randRealRange( -Width_, Width_ ),
+				0.0f,
+				-Height_ + 0.05f );
+			RigidBody->translate( -Position + NewPosition );
 
 			RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * MaVec3d( 0.0f, 0.0f, 1.0f ) );
 		}
