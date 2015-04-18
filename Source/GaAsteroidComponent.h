@@ -18,9 +18,5 @@ public:
 
 
 private:
-	BcF32 MinSize_;
-	BcF32 MaxSize_;
-	BcF32 MinVelocity_;
-
-	BcF32 Size_;
+	
 };

@@ -213,6 +213,7 @@ void GaAsteroidFieldComponent::onAttach( ScnEntityWeakRef Parent )
 	}
 
 	auto World = Parent->getComponentAnyParentByType< ScnPhysicsWorldComponent >();
+	BcAssert( World );
 	World->registerWorldUpdateHandler( this );
 
 	Super::onAttach( Parent );
