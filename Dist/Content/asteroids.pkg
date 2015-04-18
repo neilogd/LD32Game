@@ -6,10 +6,30 @@
 
 			"components" : [
 				{
+					"type" : "ScnPhysicsSphereCollisionComponent",
+
+					"radius" : 1.0
+				},
+
+				{
+					"type" : "ScnPhysicsRigidBodyComponent",
+
+					"mass" : 1.0,
+					"friction" : 1.0,
+					"rollingfriction" : 1.0,
+					"restitution" : 0.8
+				},
+
+				{
 					"type" : "GaAsteroidComponent",
 
 					"minsize" : 1.0,
-					"maxsize" : 1.0
+					"maxsize" : 1.0,
+
+					"minvelocity" : 1.0,
+					"maxvelocity" : 2.0,
+
+					"wrapdistance" : 100.0
 				}
 			]
 		}

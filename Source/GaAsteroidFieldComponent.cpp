@@ -55,11 +55,13 @@ void GaAsteroidFieldComponent::onAttach( ScnEntityWeakRef Parent )
 		size_t TemplateIdx = static_cast< size_t >( BcRandom::Global.rand() ) % AsteroidTemplates_.size();
 		auto Template = AsteroidTemplates_[ TemplateIdx ];
 
-		ScnCore::pImpl()->spawnEntity( 
+		auto Entity = ScnCore::pImpl()->spawnEntity( 
 			ScnEntitySpawnParams( 
 				Template->getName().getUnique(),
 				Template, 
 				MaMat4d(),
 				getParentEntity() )	);
+		BcAssert( Entity != nullptr );
 	}
+	Super::onAttach( Parent );
 }
