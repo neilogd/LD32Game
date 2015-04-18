@@ -11,10 +11,10 @@ struct GaUnitAction
 
 	std::string Name_;
 	std::string Description_;
-	std::string Shortcut_;
-	BcU32 Cost_;
+	BcU32 MouseButton_;
 	EvtID ActionID_;
 	std::vector< BcName > TargetClasses_;
+	BcU32 Cost_;
 };
 
 //////////////////////////////////////////////////////////////////////////

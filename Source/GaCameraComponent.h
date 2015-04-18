@@ -50,10 +50,11 @@ public:
 	MaMat4d getCameraRotationMatrix() const;
 	
 private:
-	MaVec3d CameraTarget_;
 	MaVec3d CameraRotation_;
 	BcF32 CameraDistance_;
 	BcF32 CameraZoom_;
+
+	MaVec3d CameraTarget_;
 
 	MaVec3d CameraRotationDelta_;
 

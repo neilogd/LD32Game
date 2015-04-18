@@ -19,6 +19,8 @@ void GaMinerComponent::StaticRegisterClass()
 		new ReField( "MaxVelocity_", &GaMinerComponent::MaxVelocity_, bcRFF_IMPORTER ),
 		new ReField( "MaxForce_", &GaMinerComponent::MaxForce_, bcRFF_IMPORTER ),
 		new ReField( "MiningDistance_", &GaMinerComponent::MiningDistance_, bcRFF_IMPORTER ),
+		new ReField( "MiningRate_", &GaMinerComponent::MiningRate_, bcRFF_IMPORTER ),
+		new ReField( "MiningSizeThreshold_", &GaMinerComponent::MiningSizeThreshold_, bcRFF_IMPORTER ),
 
 		new ReField( "State_", &GaMinerComponent::State_, bcRFF_TRANSIENT ),
 		new ReField( "CirclingTimer_", &GaMinerComponent::CirclingTimer_, bcRFF_TRANSIENT ),
@@ -36,7 +38,9 @@ GaMinerComponent::GaMinerComponent():
 	State_( State::IDLE ),
 	MaxVelocity_( 0.0f ),
 	MaxForce_( 0.0f ),
-	MiningDistance_( 4.0 ),
+	MiningDistance_( 4.0f ),
+	MiningSizeThreshold_( 0.1f ),
+	MiningRate_( 0.1f ),
 	CirclingTimer_( 0.0f ),
 	TargetPosition_( 0.0f, 0.0f, 0.0f ),
 	Target_( nullptr )
@@ -73,7 +77,8 @@ void GaMinerComponent::update( BcF32 Tick )
 
 	case State::ACCIDENTING:
 		{
-
+			auto TargetRigidBody = Target_->getComponentByType< ScnPhysicsRigidBodyComponent >();
+			TargetPosition_ = TargetRigidBody->getPosition();
 		}
 		break;
 
@@ -85,17 +90,18 @@ void GaMinerComponent::update( BcF32 Tick )
 		break;
 	}
 
-	// Move to target position.
+	// Movement handling.
+	BcF32 Damping = 0.0f;
+	auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
+	auto Position = RigidBody->getPosition();
 	if( Target_ != nullptr )
 	{
-		auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
-		auto Position = RigidBody->getPosition();
 
 		auto Displacement = TargetPosition_ - Position;
-
-		if( Displacement.magnitude() > 2.0f )
+		auto DisplacementMag = Displacement.magnitude();
+		if( DisplacementMag > 2.0f )
 		{
-			auto ForceAmount = Displacement.normal() * MaxForce_;
+			auto ForceAmount = Displacement.normal() * MaxForce_ * RigidBody->getMass();
 			RigidBody->applyCentralForce( ForceAmount );
 
 			ScnDebugRenderComponent::pImpl()->drawLine( 
@@ -105,16 +111,44 @@ void GaMinerComponent::update( BcF32 Tick )
 				0 );
 		}
 
-		BcF32 Damping = 0.0f;
+		if( State_ == State::MINING )
+		{
+			if( DisplacementMag < ( MiningDistance_ * 1.1f ) )
+			{
+				// DRAW LAZ0R.
+				ScnDebugRenderComponent::pImpl()->drawLine( 
+					Position,
+					Target_->getParentEntity()->getWorldPosition(),
+					RsColour::ORANGE,
+					0 );
+
+				auto Asteroid = Target_->getComponentByType< GaAsteroidComponent >();
+				BcAssert( Asteroid );
+
+				auto Size = Asteroid->getSize();
+				Size -= Tick * MiningRate_;
+				Asteroid->setSize( Size );
+				if( Size < MiningSizeThreshold_ )
+				{
+					Target_ = nullptr;
+					State_ = State::IDLE;
+				}
+			}
+		}
+
 		if( RigidBody->getLinearVelocity().magnitude() > MaxVelocity_ )
 		{
 			Damping += 0.01f;
 		}
-
 		Damping += ( BcClamp( Displacement.magnitude(), 0.0f, 4.0f ) * 0.25f );
-		Damping = 1.0f - BcClamp( Damping, 0.0f, 1.0f ) * 0.05f;
-		RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * Damping );
 	}
+	else
+	{
+		Damping += 0.25f;
+	}
+
+	Damping = 1.0f - BcClamp( Damping, 0.0f, 1.0f ) * 0.05f;
+	RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * Damping );
 
 	CirclingTimer_ += Tick;
 	if( CirclingTimer_ > BcPIMUL2 )

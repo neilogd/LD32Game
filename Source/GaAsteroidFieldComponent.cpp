@@ -1,4 +1,5 @@
 #include "GaAsteroidFieldComponent.h"
+#include "GaAsteroidComponent.h"
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Physics/ScnPhysicsWorldComponent.h"
@@ -98,6 +99,7 @@ void GaAsteroidFieldComponent::update( BcF32 Tick )
 	// or constrain them to the width.
 	for( auto Asteroid : Asteroids_ )
 	{
+		auto AsteroidComponent = Asteroid->getComponentByType< GaAsteroidComponent >();
 		auto RigidBody = Asteroid->getComponentByType< ScnPhysicsRigidBodyComponent >();
 		auto Position = RigidBody->getPosition();
 
@@ -121,32 +123,17 @@ void GaAsteroidFieldComponent::update( BcF32 Tick )
 
 			RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * MaVec3d( 0.0f, 0.0f, 1.0f ) );
 		}
-		else
+		else if( AsteroidComponent->getSize() < 0.1f )
 		{
-#if 0
-			const BcF32 ForceMultiplier = 10.0f;
-			if( Position.x() < -Width_ )
-			{
-				auto ForceAmount = -( Position.x() + Width_ ) * ForceMultiplier;
-				RigidBody->applyCentralForce( MaVec3d( ForceAmount, 0.0f, 0.0f ) );
-			}
-			else if( Position.x() > Width_ )
-			{
-				auto ForceAmount = -( Position.x() - Width_ ) * ForceMultiplier;
-				RigidBody->applyCentralForce( MaVec3d( ForceAmount, 0.0f, 0.0f ) );
-			}
+			auto Size = BcRandom::Global.randRealRange( MinSize_, MaxSize_ );
+			AsteroidComponent->setSize( Size );
 
-			if( Position.y() < -Depth_ )
-			{
-				auto ForceAmount = -( Position.y() + Depth_ ) * ForceMultiplier;
-				RigidBody->applyCentralForce( MaVec3d( 0.0f, ForceAmount, 0.0f ) );
-			}
-			else if( Position.y() > Depth_ )
-			{
-				auto ForceAmount = -( Position.y() - Depth_ ) * ForceMultiplier;
-				RigidBody->applyCentralForce( MaVec3d( 0.0f, ForceAmount, 0.0f ) );
-			}
-#endif
+			MaVec3d NewPosition = MaVec3d(
+				BcRandom::Global.randRealRange( -Width_, Width_ ),
+				0.0f,
+				-Height_ + 0.05f );
+			RigidBody->translate( -Position + NewPosition );
+			RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * MaVec3d( 0.0f, 0.0f, 1.0f ) );
 		}
 	}
 

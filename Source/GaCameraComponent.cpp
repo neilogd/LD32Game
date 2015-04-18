@@ -25,10 +25,11 @@ void GaCameraComponent::StaticRegisterClass()
 {	
 	ReField* Fields[] = 
 	{
+		new ReField( "CameraRotation_",		&GaCameraComponent::CameraRotation_, bcRFF_IMPORTER ),
+		new ReField( "CameraDistance_",		&GaCameraComponent::CameraDistance_, bcRFF_IMPORTER ),
+		new ReField( "CameraZoom_",			&GaCameraComponent::CameraZoom_, bcRFF_IMPORTER ),
+
 		new ReField( "CameraTarget_",		&GaCameraComponent::CameraTarget_ ),
-		new ReField( "CameraRotation_",		&GaCameraComponent::CameraRotation_ ),
-		new ReField( "CameraDistance_",		&GaCameraComponent::CameraDistance_ ),
-		new ReField( "CameraZoom_",			&GaCameraComponent::CameraZoom_ ),
 		new ReField( "CameraState_",		&GaCameraComponent::CameraState_ ),
 		new ReField( "NextCameraState_",	&GaCameraComponent::NextCameraState_ ),
 	};

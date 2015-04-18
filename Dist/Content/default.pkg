@@ -39,7 +39,11 @@
 						},
 
 						{
-							"type" : "GaCameraComponent"
+							"type" : "GaCameraComponent",
+
+							"camerarotation" : "1.2, 0.0, 0.0",
+							"cameradistance" : 48.0,
+							"camerazoom" : 0.0
 						},
 
 						{

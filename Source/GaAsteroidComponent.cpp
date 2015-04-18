@@ -2,6 +2,7 @@
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Physics/ScnPhysicsRigidBodyComponent.h"
+#include "System/Scene/Physics/ScnPhysicsCollisionComponent.h"
 
 #include "Base/BcRandom.h"
 
@@ -11,20 +12,22 @@ REFLECTION_DEFINE_DERIVED( GaAsteroidComponent );
 
 void GaAsteroidComponent::StaticRegisterClass()
 {
-	/*
 	ReField* Fields[] = 
 	{
-		new ReField( "Size_", &GaAsteroidComponent::Size_ ),
+		new ReField( "MassSizeRatio_", &GaAsteroidComponent::MassSizeRatio_, bcRFF_IMPORTER ),
+		new ReField( "Size_", &GaAsteroidComponent::Size_, bcRFF_IMPORTER ),
 	};
-	*/
 	
-	ReRegisterClass< GaAsteroidComponent, Super >()
+	ReRegisterClass< GaAsteroidComponent, Super >( Fields )
 		.addAttribute( new ScnComponentAttribute( 0 ) );
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Ctor
-GaAsteroidComponent::GaAsteroidComponent()
+GaAsteroidComponent::GaAsteroidComponent():
+	MassSizeRatio_( 1.0f ),
+	Size_( 1.0f ),
+	OldSize_( 0.0f )
 {
 
 }
@@ -41,17 +44,16 @@ GaAsteroidComponent::~GaAsteroidComponent()
 // update
 void GaAsteroidComponent::update( BcF32 Tick )
 {
-	auto Transform = getParentEntity()->getWorldMatrix();
-
-#if 0
-	ScnDebugRenderComponent::pImpl()->drawEllipsoid( 
-		Transform.translation(),
-		MaVec3d( Size_, Size_, Size_ ),
-		RsColour::WHITE,
-		0 );
-#endif
-
-	Super::update( Tick );
+	if( Size_ > 0.0f )
+	{
+		if( Size_ != OldSize_ )
+		{
+			auto CollisionComponent = getComponentByType< ScnPhysicsCollisionComponent >();
+			BcAssert( CollisionComponent );
+			CollisionComponent->setLocalScaling( MaVec3d( Size_, Size_, Size_ ) );
+			OldSize_ = Size_;
+		}
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

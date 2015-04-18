@@ -94,17 +94,20 @@ void GaGameComponent::update( BcF32 Tick )
 				EvtID ActionID = BcErrorCode;
 				for( const auto& Action : SelectedUnit_->getActions() )
 				{
-					for( auto& Component : ClickedUnit->getParentEntity()->getComponents() )
+					if( Action.MouseButton_ == Event.ButtonCode_ )
 					{
-						for( const auto& TargetClass : Action.TargetClasses_ )
+						for( auto& Component : ClickedUnit->getParentEntity()->getComponents() )
 						{
-							if( Component->getClass()->getName() == TargetClass )
+							for( const auto& TargetClass : Action.TargetClasses_ )
 							{
-								ActionID = Action.ActionID_;
-								break;
+								if( Component->getClass()->getName() == TargetClass )
+								{
+									ActionID = Action.ActionID_;
+									break;
+								}
 							}
+							if( ActionID != BcErrorCode ) break;
 						}
-						if( ActionID != BcErrorCode ) break;
 					}
 					if( ActionID != BcErrorCode ) break;
 				}
