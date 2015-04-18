@@ -27,7 +27,7 @@ private:
 	BcF32 MinSize_;
 	BcF32 MaxSize_;
 	BcF32 Width_;
-	BcF32 Height_;
+	BcF32 MaxExtents_;
 	BcF32 Depth_;
 	BcF32 Margin_;
 

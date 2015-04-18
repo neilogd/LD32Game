@@ -29,7 +29,7 @@
 
 				{
 					"name" : "GameEntity",
-				"type" : "ScnEntity",
+					"type" : "ScnEntity",
 
 					"components" : [
 						{
@@ -73,15 +73,15 @@
 								"$(ScnEntity:asteroids.AsteroidEntity_0)"
 							],
 
-							"noofasteroids" : 16,
+							"noofasteroids" : 32,
 
-							"minvelocity" : 0.25,
-							"maxvelocity" : 1.0,
+							"minvelocity" : 1.0,
+							"maxvelocity" : 2.5,
 							"minsize" : 1.0,
 							"maxsize" : 1.5,
 
 							"width" : 16.0,
-							"height" : 32.0,
+							"maxextents" : 64.0,
 							"depth" : 1.0,
 							"margin" : 4.0
 

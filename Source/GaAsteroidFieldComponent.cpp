@@ -24,7 +24,7 @@ void GaAsteroidFieldComponent::StaticRegisterClass()
 		new ReField( "MinVelocity_", &GaAsteroidFieldComponent::MinVelocity_, bcRFF_IMPORTER ),
 		new ReField( "MaxVelocity_", &GaAsteroidFieldComponent::MaxVelocity_, bcRFF_IMPORTER ),
 		new ReField( "Width_", &GaAsteroidFieldComponent::Width_, bcRFF_IMPORTER ),
-		new ReField( "Height_", &GaAsteroidFieldComponent::Height_, bcRFF_IMPORTER ),
+		new ReField( "MaxExtents_", &GaAsteroidFieldComponent::MaxExtents_, bcRFF_IMPORTER ),
 		new ReField( "Depth_", &GaAsteroidFieldComponent::Depth_, bcRFF_IMPORTER ),
 		new ReField( "Margin_", &GaAsteroidFieldComponent::Margin_, bcRFF_IMPORTER ),
 
@@ -44,7 +44,7 @@ GaAsteroidFieldComponent::GaAsteroidFieldComponent():
 	MinVelocity_( 1.0f ),
 	MaxVelocity_( 1.0f ),
 	Width_( 32.0f ),
-	Height_( 32.0f ),
+	MaxExtents_( 64.0f ),
 	Depth_( 1.0f ),
 	Margin_( 1.0f )
 {
@@ -64,34 +64,34 @@ GaAsteroidFieldComponent::~GaAsteroidFieldComponent()
 void GaAsteroidFieldComponent::update( BcF32 Tick )
 {
 	ScnDebugRenderComponent::pImpl()->drawLine( 
-		MaVec3d( -Width_, 0.0f, -Height_ ),
-		MaVec3d(  Width_, 0.0f, -Height_ ),
+		MaVec3d( -Width_, 0.0f, -MaxExtents_ ),
+		MaVec3d(  Width_, 0.0f, -MaxExtents_ ),
 		RsColour::GREEN,
 		0 );
 	ScnDebugRenderComponent::pImpl()->drawLine( 
-		MaVec3d( -Width_, 0.0f,  Height_ ),
-		MaVec3d(  Width_, 0.0f,  Height_ ),
+		MaVec3d( -Width_, 0.0f,  MaxExtents_ ),
+		MaVec3d(  Width_, 0.0f,  MaxExtents_ ),
 		RsColour::GREEN,
 		0 );
 	ScnDebugRenderComponent::pImpl()->drawLine( 
-		MaVec3d( -Width_, 0.0f, -Height_ ),
-		MaVec3d( -Width_, 0.0f,  Height_ ),
+		MaVec3d( -Width_, 0.0f, -MaxExtents_ ),
+		MaVec3d( -Width_, 0.0f,  MaxExtents_ ),
 		RsColour::GREEN,
 		0 );
 	ScnDebugRenderComponent::pImpl()->drawLine( 
-		MaVec3d(  Width_, 0.0f, -Height_ ),
-		MaVec3d(  Width_, 0.0f,  Height_ ),
+		MaVec3d(  Width_, 0.0f, -MaxExtents_ ),
+		MaVec3d(  Width_, 0.0f,  MaxExtents_ ),
 		RsColour::GREEN,
 		0 );
 
 	ScnDebugRenderComponent::pImpl()->drawLine( 
-		MaVec3d( -Width_, 0.0f, -( Height_ + Margin_ ) ),
-		MaVec3d(  Width_, 0.0f, -( Height_ + Margin_ ) ),
+		MaVec3d( -Width_, 0.0f, -( MaxExtents_ + Margin_ ) ),
+		MaVec3d(  Width_, 0.0f, -( MaxExtents_ + Margin_ ) ),
 		RsColour::RED,
 		0 );
 	ScnDebugRenderComponent::pImpl()->drawLine( 
-		MaVec3d( -Width_, 0.0f,  ( Height_ + Margin_ ) ),
-		MaVec3d(  Width_, 0.0f,  ( Height_ + Margin_ ) ),
+		MaVec3d( -Width_, 0.0f,  ( MaxExtents_ + Margin_ ) ),
+		MaVec3d(  Width_, 0.0f,  ( MaxExtents_ + Margin_ ) ),
 		RsColour::RED,
 		0 );
 
@@ -103,11 +103,10 @@ void GaAsteroidFieldComponent::update( BcF32 Tick )
 		auto RigidBody = Asteroid->getComponentByType< ScnPhysicsRigidBodyComponent >();
 		auto Position = RigidBody->getPosition();
 
-		if( Position.z() < -( Height_ + Margin_ ) )
-		{
-			recycle( AsteroidComponent );
-		}
-		else if( Position.z() > ( Height_ + Margin_ ) )
+		if( Position.z() < -( MaxExtents_ + Margin_ ) ||
+			Position.z() > ( MaxExtents_ + Margin_ ) ||
+			Position.x() < -( MaxExtents_ + Margin_ ) ||
+			Position.x() > ( MaxExtents_ + Margin_ ) )
 		{
 			recycle( AsteroidComponent );
 		}
@@ -115,6 +114,20 @@ void GaAsteroidFieldComponent::update( BcF32 Tick )
 		{
 			recycle( AsteroidComponent );
 		}
+
+		if( Position.y() < -Depth_ )
+		{
+			RigidBody->applyCentralForce( MaVec3d( 0.0f, RigidBody->getMass(), 0.0f ) );
+		}
+		else if( Position.y() > Depth_ )
+		{
+			RigidBody->applyCentralForce( MaVec3d( 0.0f, -RigidBody->getMass(), 0.0f ) );
+		}
+
+
+		// Try to keep em moving along.
+		RigidBody->applyCentralForce( MaVec3d( 0.0f, 0.0f, 0.01f ) );
+
 	}
 
 	Super::update( Tick );
@@ -139,7 +152,7 @@ void GaAsteroidFieldComponent::onAttach( ScnEntityWeakRef Parent )
 			MaVec3d( 
 				BcRandom::Global.randRealRange( -Width_, Width_ ),
 				0.0f,
-				BcRandom::Global.randRealRange( -Height_, Height_ )
+				BcRandom::Global.randRealRange( -MaxExtents_, MaxExtents_ )
 				) );
 
 		// Spawn new asteroid.
@@ -185,7 +198,7 @@ void GaAsteroidFieldComponent::recycle( GaAsteroidComponent* Asteroid, BcBool Se
 		MaVec3d NewPosition = MaVec3d(
 			BcRandom::Global.randRealRange( -Width_, Width_ ),
 			0.0f,
-			-Height_ + 0.05f );
+			-MaxExtents_ + 0.05f );
 		RigidBody->translate( -Position + NewPosition );
 	}
 

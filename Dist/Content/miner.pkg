@@ -22,8 +22,8 @@
 				{
 					"type" : "GaMinerComponent",
 
-					"maxvelocity" : 10.0,
-					"maxforce" : 10.0,
+					"maxvelocity" : 20.0,
+					"maxforce" : 12.0,
 					"miningdistance" : 4.0
 				},
 
