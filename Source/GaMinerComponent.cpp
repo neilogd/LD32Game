@@ -130,6 +130,8 @@ void GaMinerComponent::update( BcF32 Tick )
 				auto Size = Asteroid->getSize();
 				Size -= Tick * MiningRate_;
 				Asteroid->setSize( Size );
+
+				// Return when asteroid is deaded, or TODO we are full.
 				if( Size < MiningSizeThreshold_ )
 				{
 					Target_ = nullptr;

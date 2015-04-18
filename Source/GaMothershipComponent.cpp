@@ -85,6 +85,10 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 		[ this ]( EvtID, const EvtBaseEvent& BaseEvent )
 		{
 			const auto& Event = BaseEvent.get< GaUnitActionEvent >();
+			if( Event.SourceUnit_ != Event.TargetUnit_ )
+			{
+				return evtRET_PASS;
+			}
 
 			PSY_LOG( "GaMothershipComponent: Build event." );
 
@@ -111,6 +115,10 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 		[ this ]( EvtID, const EvtBaseEvent& BaseEvent )
 		{
 			const auto& Event = BaseEvent.get< GaUnitActionEvent >();
+			if( Event.SourceUnit_ != Event.TargetUnit_ )
+			{
+				return evtRET_PASS;
+			}
 
 			PSY_LOG( "GaMothershipComponent: Repair event." );
 

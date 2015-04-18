@@ -58,12 +58,12 @@
 							"name" : "Return",
 							"description" : "Return to mothership.",
 							"actionid" : 2,
-							"mousebutton" : 0,
+							"mousebutton" : 1,
 							"cost" : 0,
 							"targetclasses" : [
 								"GaMothershipComponent"
 							]
-						}					
+						}
 					]
 				}
 			]
