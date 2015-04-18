@@ -89,7 +89,7 @@
 
 			"source" : "Content/Source/courier.ttf",
 			"distancefield" : true,
-			"nominalsize"  24,
+			"nominalsize" : 24,
 			"spread" : 16
 		}
 	]
