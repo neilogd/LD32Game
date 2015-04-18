@@ -18,6 +18,7 @@ void GaMinerComponent::StaticRegisterClass()
 	{
 		new ReField( "MaxVelocity_", &GaMinerComponent::MaxVelocity_, bcRFF_IMPORTER ),
 		new ReField( "MaxForce_", &GaMinerComponent::MaxForce_, bcRFF_IMPORTER ),
+		new ReField( "MiningDistance_", &GaMinerComponent::MiningDistance_, bcRFF_IMPORTER ),
 
 		new ReField( "State_", &GaMinerComponent::State_, bcRFF_TRANSIENT ),
 		new ReField( "CirclingTimer_", &GaMinerComponent::CirclingTimer_, bcRFF_TRANSIENT ),
@@ -35,6 +36,7 @@ GaMinerComponent::GaMinerComponent():
 	State_( State::IDLE ),
 	MaxVelocity_( 0.0f ),
 	MaxForce_( 0.0f ),
+	MiningDistance_( 4.0 ),
 	CirclingTimer_( 0.0f ),
 	TargetPosition_( 0.0f, 0.0f, 0.0f ),
 	Target_( nullptr )
@@ -65,7 +67,7 @@ void GaMinerComponent::update( BcF32 Tick )
 	case State::MINING:
 		{
 			auto TargetRigidBody = Target_->getComponentByType< ScnPhysicsRigidBodyComponent >();
-			TargetPosition_ = TargetRigidBody->getPosition() + MaVec3d( BcCos( CirclingTimer_ ), 1.0f, BcSin( CirclingTimer_ ) ) * 2.5f;
+			TargetPosition_ = TargetRigidBody->getPosition() + MaVec3d( BcCos( CirclingTimer_ ), 1.0f, BcSin( CirclingTimer_ ) ).normal() * MiningDistance_;
 		}
 		break;
 
@@ -91,19 +93,9 @@ void GaMinerComponent::update( BcF32 Tick )
 
 		auto Displacement = TargetPosition_ - Position;
 
-		PSY_LOG( "Dis: %f, %f. Pos: %f, %f. Tar: %f, %f",
-			Displacement.x(),
-			Displacement.z(),
-			Position.x(),
-			Position.z(),
-			TargetPosition_.x(),
-			TargetPosition_.z() );
-
 		if( Displacement.magnitude() > 2.0f )
 		{
 			auto ForceAmount = Displacement.normal() * MaxForce_;
-			PSY_LOG( "APPLYING! %f, %f, %f (%f)", ForceAmount.x(), ForceAmount.y(), ForceAmount.z(), ForceAmount.magnitude() );
-
 			RigidBody->applyCentralForce( ForceAmount );
 
 			ScnDebugRenderComponent::pImpl()->drawLine( 
@@ -113,12 +105,15 @@ void GaMinerComponent::update( BcF32 Tick )
 				0 );
 		}
 
-		if( RigidBody->getLinearVelocity().magnitude() > MaxVelocity_ ||
-			Displacement.magnitude() < 2.0f )
+		BcF32 Damping = 0.0f;
+		if( RigidBody->getLinearVelocity().magnitude() > MaxVelocity_ )
 		{
-			RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * 0.9f );
+			Damping += 0.01f;
 		}
-		RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * 0.99f );
+
+		Damping += ( BcClamp( Displacement.magnitude(), 0.0f, 4.0f ) * 0.25f );
+		Damping = 1.0f - BcClamp( Damping, 0.0f, 1.0f ) * 0.05f;
+		RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * Damping );
 	}
 
 	CirclingTimer_ += Tick;

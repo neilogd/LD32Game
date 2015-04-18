@@ -20,6 +20,7 @@ public:
 private:
 	BcF32 MaxVelocity_;
 	BcF32 MaxForce_;
+	BcF32 MiningDistance_;
 
 	enum class State
 	{
