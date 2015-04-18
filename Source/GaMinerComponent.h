@@ -20,9 +20,21 @@ public:
 	void onAttach( ScnEntityWeakRef Parent ) override;
 	void onDetach( ScnEntityWeakRef Parent ) override;
 
-
 private:
+	BcF32 MaxVelocity_;
+	BcF32 MaxForce_;
 
+	enum class State
+	{
+		IDLE,
+		MINING,
+		ACCIDENTING,
+	};
 
+	State State_;
+
+	BcF32 CirclingTimer_;
+	MaVec3d TargetPosition_;
+	class GaAsteroidComponent* Target_;
 
 };

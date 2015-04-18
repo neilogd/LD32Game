@@ -108,7 +108,6 @@ void GaAsteroidFieldComponent::onPhysicsUpdate( BcF32 Tick )
 		auto RigidBody = Asteroid->getComponentByType< ScnPhysicsRigidBodyComponent >();
 		auto Position = RigidBody->getPosition();
 
-
 		if( Position.z() < -( Height_ + Margin_ ) )
 		{
 			MaVec3d NewPosition = MaVec3d(

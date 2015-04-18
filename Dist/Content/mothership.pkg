@@ -1,0 +1,51 @@
+{
+	"resources" : [
+		{
+			"name" : "MothershipEntity_0",
+			"type" : "ScnEntity",
+
+			"components" : [
+				{
+					"type" : "ScnPhysicsBoxCollisionComponent",
+					"size" : "4.0, 4.0, 4.0"
+				},
+
+				{
+					"type" : "ScnPhysicsRigidBodyComponent",
+
+					"mass" : 1.0,
+					"friction" : 1.0,
+					"rollingfriction" : 1.0,
+					"restitution" : 0.8
+				},
+
+				{
+					"type" : "GaMothershipComponent"
+				},
+
+				{
+					"type" : "GaUnitComponent",
+					"team" : 1,
+
+					"actions" : [
+						{
+							"name" : "Build Miner",
+							"description" : "Build another miner.",
+							"shortcut" : "m",
+							"cost" : 0,
+							"actionid" : 0
+						},
+
+						{
+							"name" : "Repair Shield",
+							"description" : "Repair shield.",
+							"shortcut" : "m",
+							"cost" : 0,
+							"actionid" : 0
+						}						
+					]
+				}
+			]
+		}
+	]
+}

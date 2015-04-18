@@ -33,6 +33,18 @@
 							"description" : "Begin mining target asteroid.",
 							"shortcut" : "m",
 							"actionid" : 0,
+							"cost" : 0,
+							"targetclasses" : [
+								"GaAsteroidComponent"
+							]
+						},
+
+						{
+							"name" : "Accident",
+							"description" : "Accidentally make asteroid hit competitor.",
+							"shortcut" : "a",
+							"actionid" : 1,
+							"cost" : 0,
 							"targetclasses" : [
 								"GaAsteroidComponent"
 							]
@@ -42,7 +54,11 @@
 							"name" : "Return",
 							"description" : "Return to mothership.",
 							"shortcut" : "r",
-							"actionid" : 1
+							"actionid" : 2,
+							"cost" : 0,
+							"targetclasses" : [
+								"GaMothershipComponent"
+							]
 						}					
 					]
 				}

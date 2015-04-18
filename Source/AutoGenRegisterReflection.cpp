@@ -74,6 +74,7 @@
 #include "GaCameraComponent.h"
 #include "GaGameComponent.h"
 #include "GaMinerComponent.h"
+#include "GaMothershipComponent.h"
 #include "GaSceneComponent.h"
 #include "GaUnitComponent.h"
 void AutoGenRegisterReflection()
@@ -172,6 +173,7 @@ void AutoGenRegisterReflection()
 	GaCameraComponent::StaticRegisterClass();
 	GaGameComponent::StaticRegisterClass();
 	GaMinerComponent::StaticRegisterClass();
+	GaMothershipComponent::StaticRegisterClass();
 	GaSceneComponent::StaticRegisterClass();
 	GaUnitAction::StaticRegisterClass();
 	GaUnitComponent::StaticRegisterClass();

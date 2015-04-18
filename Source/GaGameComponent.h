@@ -22,6 +22,9 @@ public:
 	void onObjectDeleted( class ReObject* Object ) override;
 
 private:
+	class ScnEntity* MothershipEntity_;
+	class ScnEntity* MinerEntity_;
+
 	class ScnViewComponent* View_;
 	class ScnPhysicsWorldComponent* World_;
 

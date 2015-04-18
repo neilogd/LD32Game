@@ -33,7 +33,9 @@
 
 					"components" : [
 						{
-							"type" : "GaGameComponent"
+							"type" : "GaGameComponent",
+							"mothershipentity" : "$(ScnEntity:mothership.MothershipEntity_0)",
+							"minerentity" : "$(ScnEntity:miner.MinerEntity_0)"
 						},
 
 						{
@@ -80,17 +82,6 @@
 							"depth" : 1.0,
 							"margin" : 4.0
 
-						}
-					]
-				},
-
-				{
-					"name" : "Team_0",
-					"type" : "ScnEntity",
-
-					"components" : [
-						{
-							"$Reference" : "$(ScnEntity:miner.MinerEntity_0)"
 						}
 					]
 				}
