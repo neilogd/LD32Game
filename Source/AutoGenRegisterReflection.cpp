@@ -69,6 +69,8 @@
 #include "System/Sound/SsCore.h"
 #include "System/SysKernel.h"
 #include "System/SysSystem.h"
+#include "GaAsteroidComponent.h"
+#include "GaAsteroidFieldComponent.h"
 #include "GaCameraComponent.h"
 #include "GaSceneComponent.h"
 void AutoGenRegisterReflection()
@@ -162,6 +164,8 @@ void AutoGenRegisterReflection()
 	SsCore::StaticRegisterClass();
 	SysKernel::StaticRegisterClass();
 	SysSystem::StaticRegisterClass();
+	GaAsteroidComponent::StaticRegisterClass();
+	GaAsteroidFieldComponent::StaticRegisterClass();
 	GaCameraComponent::StaticRegisterClass();
 	GaSceneComponent::StaticRegisterClass();
 }

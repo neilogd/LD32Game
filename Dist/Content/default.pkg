@@ -40,6 +40,23 @@
 							"rendermask" : 1
 						}
 					]
+				},
+
+				{
+					"name" : "AsteroidField",
+					"type" : "ScnEntity",
+
+					"components" : [
+						{
+							"type" : "GaAsteroidFieldComponent",
+
+							"asteroidtemplates" : [
+								"$(ScnEntity:asteroids.AsteroidEntity_0)"
+							],
+
+							"noofasteroids" : 1
+						}
+					]
 				}
 			]
 		}

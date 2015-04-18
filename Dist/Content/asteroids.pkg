@@ -1,0 +1,17 @@
+{
+	"resources" : [
+		{
+			"name" : "AsteroidEntity_0",
+			"type" : "ScnEntity",
+
+			"components" : [
+				{
+					"type" : "GaAsteroidComponent",
+
+					"minsize" : 1.0,
+					"maxsize" : 1.0
+				}
+			]
+		}
+	]
+}

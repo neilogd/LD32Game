@@ -35,11 +35,5 @@ void PsyGameInit()
 // PsyLaunchGame
 void PsyLaunchGame()
 {
-	ScnEntitySpawnParams SceneEntityParams = 
-	{
-		"default", "SceneEntity", "SceneEntity",
-		MaMat4d(),
-		nullptr
-	};
-	ScnCore::pImpl()->spawnEntity( SceneEntityParams );
+	ScnCore::pImpl()->spawnEntity( ScnEntitySpawnParams( "SceneEntity", "default", "SceneEntity", MaMat4d(), nullptr ) );
 }
