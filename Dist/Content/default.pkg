@@ -18,8 +18,7 @@
 					"gravity" : "0.0, 0.0, 0.0",
 					"maxsubsteps" : 2,
 					"framerate" : 60.0,
-					"drawdebugworld" : true
-
+					"debugdrawworld" : true
 				},
 
 				{
@@ -64,7 +63,16 @@
 								"$(ScnEntity:asteroids.AsteroidEntity_0)"
 							],
 
-							"noofasteroids" : 1
+							"noofasteroids" : 128,
+
+							"minvelocity" : 2.0,
+							"maxvelocity" : 4.0,
+							"minsize" : 0.5,
+							"maxsize" : 2.0,
+
+							"width" : 16.0,
+							"height" : 32.0
+
 						}
 					]
 				}

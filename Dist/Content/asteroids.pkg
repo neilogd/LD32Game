@@ -21,15 +21,7 @@
 				},
 
 				{
-					"type" : "GaAsteroidComponent",
-
-					"minsize" : 1.0,
-					"maxsize" : 1.0,
-
-					"minvelocity" : 1.0,
-					"maxvelocity" : 2.0,
-
-					"wrapdistance" : 100.0
+					"type" : "GaAsteroidComponent"
 				}
 			]
 		}
