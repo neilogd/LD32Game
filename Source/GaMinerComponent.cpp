@@ -69,5 +69,5 @@ void GaMinerComponent::onDetach( ScnEntityWeakRef Parent )
 	{
 		World->deregisterWorldUpdateHandler( this );
 	}
-	Super::onAttach( Parent );
+	Super::onDetach( Parent );
 }

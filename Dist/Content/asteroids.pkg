@@ -22,7 +22,13 @@
 
 				{
 					"type" : "GaAsteroidComponent"
+				},
+
+				{
+					"type" : "GaUnitComponent",
+					"team" : 0
 				}
+
 			]
 		}
 	]

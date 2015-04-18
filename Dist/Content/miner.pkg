@@ -6,8 +6,8 @@
 
 			"components" : [
 				{
-					"type" : "ScnPhysicsSphereCollisionComponent",
-					"radius" : 1.0
+					"type" : "ScnPhysicsBoxCollisionComponent",
+					"size" : "1.0, 1.0, 1.0"
 				},
 
 				{
@@ -24,8 +24,27 @@
 				},
 
 				{
-					"type" : "GaTeamMemberComponent",
-					"team" : 0
+					"type" : "GaUnitComponent",
+					"team" : 1,
+
+					"actions" : [
+						{
+							"name" : "Mine",
+							"description" : "Begin mining target asteroid.",
+							"shortcut" : "m",
+							"actionid" : 0,
+							"targetclasses" : [
+								"GaAsteroidComponent"
+							]
+						},
+
+						{
+							"name" : "Return",
+							"description" : "Return to mothership.",
+							"shortcut" : "r",
+							"actionid" : 1
+						}					
+					]
 				}
 			]
 		}
