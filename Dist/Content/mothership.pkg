@@ -7,7 +7,7 @@
 			"components" : [
 				{
 					"type" : "ScnPhysicsBoxCollisionComponent",
-					"size" : "4.0, 4.0, 4.0"
+					"size" : "10.0, 4.0, 15.0"
 				},
 
 				{

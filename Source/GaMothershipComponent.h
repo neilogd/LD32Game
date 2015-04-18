@@ -1,5 +1,6 @@
 #pragma once
 #include "Psybrus.h"
+#include "Math/MaQuat.h"
 
 //////////////////////////////////////////////////////////////////////////
 // GaMothershipComponent
@@ -12,5 +13,11 @@ public:
 	GaMothershipComponent();
 	virtual ~GaMothershipComponent();
 
-	virtual void update( BcF32 Tick );
+	void update( BcF32 Tick ) override;
+
+	void onAttach( ScnEntityWeakRef Parent ) override;
+
+private:
+	MaVec3d TargetPosition_;	
+	MaQuat TargetRotation_;
 };

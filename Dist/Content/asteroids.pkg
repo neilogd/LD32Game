@@ -23,14 +23,14 @@
 				},
 
 				{
-					"type" : "GaAsteroidComponent"
+					"type" : "GaAsteroidComponent",
+					"masssizeratio" : 10.0
 				},
 
 				{
 					"type" : "GaUnitComponent",
 					"team" : 0
 				}
-
 			]
 		}
 	]

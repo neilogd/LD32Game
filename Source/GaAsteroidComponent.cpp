@@ -48,9 +48,13 @@ void GaAsteroidComponent::update( BcF32 Tick )
 	{
 		if( Size_ != OldSize_ )
 		{
-			auto CollisionComponent = getComponentByType< ScnPhysicsCollisionComponent >();
-			BcAssert( CollisionComponent );
-			CollisionComponent->setLocalScaling( MaVec3d( Size_, Size_, Size_ ) );
+			auto Collision = getComponentByType< ScnPhysicsCollisionComponent >();
+			auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
+			BcAssert( Collision );
+			BcAssert( RigidBody );
+			Collision->setLocalScaling( MaVec3d( Size_, Size_, Size_ ) );
+			RigidBody->setMass( Size_ * MassSizeRatio_ );
+
 			OldSize_ = Size_;
 		}
 	}
