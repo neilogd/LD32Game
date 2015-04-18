@@ -1,9 +1,11 @@
 #include "GaMinerComponent.h"
 #include "GaAsteroidComponent.h"
 #include "GaUnitComponent.h"
+#include "GaMothershipComponent.h"
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Physics/ScnPhysicsRigidBodyComponent.h"
+#include "System/Scene/Physics/ScnPhysicsEvents.h"
 
 #include "Base/BcMath.h"
 #include "Base/BcRandom.h"
@@ -199,6 +201,50 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 			State_ = State::RETURNING;
 
 			Target_ = Event.TargetUnit_;
+
+			return evtRET_PASS;
+		} );
+
+	// Collision.
+	Parent->subscribe( (EvtID)ScnPhysicsEvents::COLLISION, this,
+		[ this, Parent ]( EvtID, const EvtBaseEvent& BaseEvent )
+		{
+			const auto& Event = BaseEvent.get< ScnPhysicsEventCollision >();
+			if( State_ == State::ACCIDENTING )
+			{
+				auto OtherEntity = Event.BodyB_->getParentEntity();
+				auto AsteroidComponent = OtherEntity->getComponentByType< GaAsteroidComponent >();
+				if( AsteroidComponent )
+				{
+					auto Unit = getComponentByType< GaUnitComponent >();
+					for( auto Component : Parent->getParentEntity()->getComponents() )
+					{
+						if( Component->getComponentByType< GaMothershipComponent >() )
+						{
+							auto ShipUnit = Component->getComponentByType< GaUnitComponent >();
+							if( ShipUnit->getTeam() != Unit->getTeam() )
+							{
+								// Apply a force to the asteroid to hit the shit.
+								auto AsteroidRigidBody = AsteroidComponent->getParentEntity()->getComponentByType< ScnPhysicsRigidBodyComponent >();
+								AsteroidRigidBody->setLinearVelocity( MaVec3d( 0.0f, 0.0f, 0.0f ) );
+								auto AsteroidPosition = AsteroidRigidBody->getPosition();
+								auto ShipPosition = ShipUnit->getParentEntity()->getLocalPosition();
+								auto Displacement = ShipPosition - AsteroidPosition;
+
+								// Apply impulse based on our *own* mass.
+								AsteroidRigidBody->applyCentralImpulse( Displacement.normal() * Event.BodyA_->getMass() );
+
+								// Remove ourself.
+								ScnCore::pImpl()->removeEntity( getParentEntity() );
+								// Unregister from further events (invalid from this point)
+								return evtRET_REMOVE;
+							}
+						}
+					}
+				} 
+			}
+
+			// Destroy self.
 
 			return evtRET_PASS;
 		} );

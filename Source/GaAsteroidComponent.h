@@ -16,6 +16,8 @@ public:
 
 	void onAttach( ScnEntityWeakRef Parent ) override;
 
+	void recycle();
+
 	void setSize( BcF32 Size ) { Size_ = Size; }
 	BcF32 getSize() const { return Size_; }
 

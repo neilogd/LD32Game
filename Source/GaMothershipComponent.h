@@ -18,6 +18,8 @@ public:
 	void onAttach( ScnEntityWeakRef Parent ) override;
 
 private:
+	class ScnEntity* MinerEntity_;
+
 	MaVec3d TargetPosition_;	
 	MaQuat TargetRotation_;
 };

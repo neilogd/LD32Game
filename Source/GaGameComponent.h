@@ -23,7 +23,6 @@ public:
 
 private:
 	class ScnEntity* MothershipEntity_;
-	class ScnEntity* MinerEntity_;
 
 	class ScnViewComponent* View_;
 	class ScnPhysicsWorldComponent* World_;
@@ -31,7 +30,6 @@ private:
 	class GaUnitComponent* SelectedUnit_;
 
 	std::vector< std::pair< EvtID, OsEventInputMouse > > MouseEvents_;
-
 
 };
 

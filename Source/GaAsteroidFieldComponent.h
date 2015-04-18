@@ -17,6 +17,7 @@ public:
 	void onAttach( ScnEntityWeakRef Parent ) override;
 	void onDetach( ScnEntityWeakRef Parent ) override;
 
+	void recycle( class GaAsteroidComponent* Asteroid, BcBool SetPosition = BcTrue );
 
 private:
 	std::vector< ScnEntity* > AsteroidTemplates_;

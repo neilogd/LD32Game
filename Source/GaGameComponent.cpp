@@ -17,7 +17,6 @@ void GaGameComponent::StaticRegisterClass()
 	ReField* Fields[] = 
 	{
 		new ReField( "MothershipEntity_", &GaGameComponent::MothershipEntity_, bcRFF_IMPORTER ),
-		new ReField( "MinerEntity_", &GaGameComponent::MinerEntity_, bcRFF_IMPORTER ),
 
 		new ReField( "View_", &GaGameComponent::View_, bcRFF_TRANSIENT ),
 		new ReField( "World_", &GaGameComponent::View_, bcRFF_TRANSIENT ),
@@ -33,7 +32,6 @@ void GaGameComponent::StaticRegisterClass()
 // Ctor
 GaGameComponent::GaGameComponent():
 	MothershipEntity_( nullptr ),
-	MinerEntity_( nullptr ),
 	View_( nullptr ),
 	World_( nullptr ),
 	SelectedUnit_( nullptr ),
@@ -81,6 +79,7 @@ void GaGameComponent::update( BcF32 Tick )
 		}
 		else
 		{
+			if( SelectedUnit_ ) SelectedUnit_->removeNotifier( this );
 			SelectedUnit_ = nullptr;
 		}
 
@@ -154,11 +153,14 @@ void GaGameComponent::update( BcF32 Tick )
 			// No action? Reselect.
 			if( PerformedAction == BcFalse )
 			{
+				if( SelectedUnit_ ) SelectedUnit_->removeNotifier( this );
 				SelectedUnit_ = ClickedUnit;
+				if( SelectedUnit_ ) SelectedUnit_->addNotifier( this );
 			}
 		}
 		else
 		{
+			if( SelectedUnit_ ) SelectedUnit_->removeNotifier( this );
 			SelectedUnit_ = nullptr;
 		}
 
@@ -191,15 +193,10 @@ void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 
 	MaMat4d MothershipTransform0;
 	MaMat4d MothershipTransform1;
-	MaMat4d MinerTransform0;
-	MaMat4d MinerTransform1;
 	MothershipTransform0.translation( MaVec3d( -32.0f, 0.0f, 0.0f ) );
 	MothershipTransform1.translation( MaVec3d(  32.0f, 0.0f, 0.0f ) );
-	MinerTransform0.translation( MaVec3d( -32.0f, 8.0f, 0.0f ) );
-	MinerTransform1.translation( MaVec3d(  32.0f, 8.0f, 0.0f ) );
 
 	BcAssert( MothershipEntity_ );
-	BcAssert( MinerEntity_ );
 	{
 		auto MotherShipEntity0 = ScnCore::pImpl()->spawnEntity(
 			ScnEntitySpawnParams(
@@ -209,15 +206,6 @@ void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 				SceneEntity ) );
 		auto MotherUnit = MotherShipEntity0->getComponentByType< GaUnitComponent >();
 		MotherUnit->setTeam( 1 );
-
-		auto MinerEntity0 = ScnCore::pImpl()->spawnEntity(
-			ScnEntitySpawnParams(
-				"MinerEntity_0",
-				MinerEntity_,
-				MinerTransform0,
-				SceneEntity ) );
-		auto MinerUnit = MinerEntity0->getComponentByType< GaUnitComponent >();
-		MinerUnit->setTeam( 1 );
 	}
 
 	{
@@ -229,15 +217,6 @@ void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 				SceneEntity ) );
 		auto Unit = MotherShipEntity1->getComponentByType< GaUnitComponent >();
 		Unit->setTeam( 2 );
-
-		auto MinerEntity1 = ScnCore::pImpl()->spawnEntity(
-			ScnEntitySpawnParams(
-				"MinerEntity_1",
-				MinerEntity_,
-				MinerTransform1,
-				SceneEntity ) );
-		auto MinerUnit = MinerEntity1->getComponentByType< GaUnitComponent >();
-		MinerUnit->setTeam( 2 );
 	}
 
 

@@ -37,5 +37,4 @@ private:
 	BcF32 CirclingTimer_;
 	MaVec3d TargetPosition_;
 	class GaUnitComponent* Target_;
-
 };

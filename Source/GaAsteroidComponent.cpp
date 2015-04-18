@@ -1,8 +1,10 @@
 #include "GaAsteroidComponent.h"
+#include "GaAsteroidFieldComponent.h"
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Physics/ScnPhysicsRigidBodyComponent.h"
 #include "System/Scene/Physics/ScnPhysicsCollisionComponent.h"
+#include "System/Scene/Physics/ScnPhysicsEvents.h"
 
 #include "Base/BcRandom.h"
 
@@ -64,5 +66,22 @@ void GaAsteroidComponent::update( BcF32 Tick )
 // onAttach
 void GaAsteroidComponent::onAttach( ScnEntityWeakRef Parent )
 {
+	// Collision.
+	Parent->subscribe( (EvtID)ScnPhysicsEvents::COLLISION, this,
+		[ this, Parent ]( EvtID, const EvtBaseEvent& BaseEvent )
+		{
+			const auto& Event = BaseEvent.get< ScnPhysicsEventCollision >();
+			PSY_LOG( "Asteroid has been hit." );
+			return evtRET_PASS;
+		} );
+
 	Super::onAttach( Parent );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// recycle
+void GaAsteroidComponent::recycle()
+{
+	auto Field = getParentEntity()->getParentEntity()->getComponentByType< GaAsteroidFieldComponent >();
+	Field->recycle( this );
 }

@@ -105,35 +105,15 @@ void GaAsteroidFieldComponent::update( BcF32 Tick )
 
 		if( Position.z() < -( Height_ + Margin_ ) )
 		{
-			MaVec3d NewPosition = MaVec3d(
-				BcRandom::Global.randRealRange( -Width_, Width_ ),
-				0.0f,
-				Height_ - 0.05f );
-			RigidBody->translate( -Position + NewPosition );
-
-			RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * MaVec3d( 0.0f, 0.0f, 1.0f ) );
+			recycle( AsteroidComponent );
 		}
 		else if( Position.z() > ( Height_ + Margin_ ) )
 		{
-			MaVec3d NewPosition = MaVec3d(
-				BcRandom::Global.randRealRange( -Width_, Width_ ),
-				0.0f,
-				-Height_ + 0.05f );
-			RigidBody->translate( -Position + NewPosition );
-
-			RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * MaVec3d( 0.0f, 0.0f, 1.0f ) );
+			recycle( AsteroidComponent );
 		}
 		else if( AsteroidComponent->getSize() < 0.1f )
 		{
-			auto Size = BcRandom::Global.randRealRange( MinSize_, MaxSize_ );
-			AsteroidComponent->setSize( Size );
-
-			MaVec3d NewPosition = MaVec3d(
-				BcRandom::Global.randRealRange( -Width_, Width_ ),
-				0.0f,
-				-Height_ + 0.05f );
-			RigidBody->translate( -Position + NewPosition );
-			RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * MaVec3d( 0.0f, 0.0f, 1.0f ) );
+			recycle( AsteroidComponent );
 		}
 	}
 
@@ -176,19 +156,7 @@ void GaAsteroidFieldComponent::onAttach( ScnEntityWeakRef Parent )
 		ScnCore::pImpl()->subscribe( sysEVT_SYSTEM_POST_UPDATE, this,
 			[ this, Entity ]( EvtID, const EvtBaseEvent& )->eEvtReturn
 			{
-				auto Velocity = BcRandom::Global.randRealRange( MinVelocity_, MaxVelocity_ );
-				auto RigidBody = Entity->getComponentByType< ScnPhysicsRigidBodyComponent >();
-				RigidBody->setLinearVelocity( MaVec3d( 0.0f, 0.0f, Velocity ) );
-
-				const BcF32 AngularRange = 1.0f;
-				RigidBody->setAngularVelocity( MaVec3d( 
-					BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
-					BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
-					BcRandom::Global.randRealRange( -AngularRange, AngularRange ) ) );
-
-				auto Size = BcRandom::Global.randRealRange( MinSize_, MaxSize_ );
-				auto CollisionComponent = Entity->getComponentByType< ScnPhysicsSphereCollisionComponent >();
-				CollisionComponent->setLocalScaling( MaVec3d( Size, Size, Size ) );
+				recycle( Entity->getComponentByType< GaAsteroidComponent >(), BcFalse );
 				return evtRET_REMOVE;
 			} );
 	}
@@ -203,3 +171,31 @@ void GaAsteroidFieldComponent::onDetach( ScnEntityWeakRef Parent )
 	Super::onDetach( Parent );
 }
 
+//////////////////////////////////////////////////////////////////////////
+// recycle
+void GaAsteroidFieldComponent::recycle( GaAsteroidComponent* Asteroid, BcBool SetPosition )
+{
+	auto RigidBody = Asteroid->getComponentByType< ScnPhysicsRigidBodyComponent >();
+	auto Position = RigidBody->getPosition();
+	auto Size = BcRandom::Global.randRealRange( MinSize_, MaxSize_ );
+	Asteroid->setSize( Size );
+
+	if( SetPosition )
+	{
+		MaVec3d NewPosition = MaVec3d(
+			BcRandom::Global.randRealRange( -Width_, Width_ ),
+			0.0f,
+			-Height_ + 0.05f );
+		RigidBody->translate( -Position + NewPosition );
+	}
+
+	const BcF32 AngularRange = 1.0f;
+	RigidBody->setAngularVelocity( MaVec3d( 
+		BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
+		BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
+		BcRandom::Global.randRealRange( -AngularRange, AngularRange ) ) );
+
+
+	auto Velocity = BcRandom::Global.randRealRange( MinVelocity_, MaxVelocity_ );
+	RigidBody->setLinearVelocity( MaVec3d( 0.0f, 0.0f, Velocity ) );
+}
