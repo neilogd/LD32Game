@@ -20,7 +20,9 @@
 				},
 
 				{
-					"type" : "GaMothershipComponent"
+					"type" : "GaMothershipComponent",
+
+					"minerentity" : "$(ScnEntity:miner.MinerEntity_0)"
 				},
 
 				{
@@ -44,7 +46,7 @@
 							"description" : "Repair shield.",
 							"cost" : 0,
 							"mousebutton" : 1,
-							"actionid" : 0,
+							"actionid" : 1,
 							"targetclasses" : [
 								"GaMothershipComponent"
 							]

@@ -29,13 +29,12 @@
 
 				{
 					"name" : "GameEntity",
-					"type" : "ScnEntity",
+				"type" : "ScnEntity",
 
 					"components" : [
 						{
 							"type" : "GaGameComponent",
-							"mothershipentity" : "$(ScnEntity:mothership.MothershipEntity_0)",
-							"minerentity" : "$(ScnEntity:miner.MinerEntity_0)"
+							"mothershipentity" : "$(ScnEntity:mothership.MothershipEntity_0)"
 						},
 
 						{
