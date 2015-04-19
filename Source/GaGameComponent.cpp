@@ -43,6 +43,8 @@ GaGameComponent::GaGameComponent():
 	UIMaterialComponent_( nullptr ),
 	View_( nullptr ),
 	World_( nullptr ),
+	Canvas_( nullptr ),
+	MousePosition_( 0.0f, 0.0f ),
 	SelectedUnit_( nullptr ),
 	MouseEvents_()
 {
