@@ -71,7 +71,7 @@ void GaAsteroidComponent::onAttach( ScnEntityWeakRef Parent )
 		[ this, Parent ]( EvtID, const EvtBaseEvent& BaseEvent )
 		{
 			const auto& Event = BaseEvent.get< ScnPhysicsEventCollision >();
-			PSY_LOG( "Asteroid has been hit." );
+			
 			return evtRET_PASS;
 		} );
 

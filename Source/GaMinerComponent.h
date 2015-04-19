@@ -20,6 +20,15 @@ public:
 
 	void onObjectDeleted( class ReObject* Object ) override;
 
+	BcBool isIdle() const { return State_ == State::IDLE; }
+	BcBool isMining() const { return State_ == State::MINING; }
+	BcBool isAttacking() const { return State_ == State::ACCIDENTING; }
+	BcBool isReturning() const { return State_ == State::RETURNING; }
+
+	MaVec3d getPosition() const { return getParentEntity()->getWorldPosition(); }
+
+	BcBool isFull( BcF32 Fraction ) const { return ( AmountMined_ ) > ( MaxCapacity_ * Fraction ); }
+
 private:
 	BcF32 MaxVelocity_;
 	BcF32 MaxForce_;

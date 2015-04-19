@@ -1,5 +1,6 @@
 #include "GaMothershipComponent.h"
 #include "GaAsteroidComponent.h"
+#include "GaAsteroidFieldComponent.h"
 #include "GaMinerComponent.h"
 #include "GaUnitComponent.h"
 
@@ -25,6 +26,12 @@ void GaMothershipComponent::StaticRegisterClass()
 		new ReField( "TargetRotation_", &GaMothershipComponent::TotalResources_, bcRFF_TRANSIENT ),
 		new ReField( "Asteroids_", &GaMothershipComponent::Asteroids_, bcRFF_TRANSIENT ),
 		new ReField( "Miners_", &GaMothershipComponent::Miners_, bcRFF_TRANSIENT ),
+
+		new ReField( "AttackWeight_", &GaMothershipComponent::AttackWeight_, bcRFF_TRANSIENT ),
+		new ReField( "MineWeight_", &GaMothershipComponent::MineWeight_, bcRFF_TRANSIENT ),
+		new ReField( "BuildWeight_", &GaMothershipComponent::BuildWeight_, bcRFF_TRANSIENT ),
+		new ReField( "RepairWeight_", &GaMothershipComponent::RepairWeight_, bcRFF_TRANSIENT ),
+		new ReField( "ReturnWeight_", &GaMothershipComponent::ReturnWeight_, bcRFF_TRANSIENT ),
 	};
 	ReRegisterClass< GaMothershipComponent, Super >( Fields )
 		.addAttribute( new ScnComponentAttribute( 0 ) );
@@ -34,7 +41,12 @@ void GaMothershipComponent::StaticRegisterClass()
 // Ctor
 GaMothershipComponent::GaMothershipComponent():
 	MinerEntity_( nullptr ),
-	TotalResources_( 0.0f )
+	TotalResources_( 0.0f ),
+	AttackWeight_( 0.0f ),
+	MineWeight_( 0.0f ),
+	BuildWeight_( 0.0f ),
+	RepairWeight_( 0.0f ),
+	ReturnWeight_( 0.0f )
 {
 
 }
@@ -52,6 +64,7 @@ GaMothershipComponent::~GaMothershipComponent()
 void GaMothershipComponent::update( BcF32 Tick )
 {
 	auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
+	auto Unit = getComponentByType< GaUnitComponent >();
 
 	// Stabilise ship position.
 	auto RigidBodyPosition = RigidBody->getPosition();
@@ -81,6 +94,78 @@ void GaMothershipComponent::update( BcF32 Tick )
 				BcRandom::Global.randRealRange( -1.0f, 1.0f ),
 				BcRandom::Global.randRealRange( -1.0f, 1.0f ),
 				BcRandom::Global.randRealRange( -1.0f, 1.0f ) ) * 0.5f );
+	}
+
+	// AI player :)
+	if( Unit->getTeam() == 2 )
+	{
+		AttackWeight_ = std::max( AttackWeight_, 0.0f );
+		MineWeight_ = std::max( MineWeight_, 0.0f );
+		BuildWeight_ = std::max( BuildWeight_, 0.0f );
+		RepairWeight_ = std::max( RepairWeight_, 0.0f );
+		ReturnWeight_ = std::max( RepairWeight_, 0.0f );
+
+		// Build miners.
+		{
+			for( BcU32 Idx = 1; Idx < 8; ++Idx )
+			{
+				if( TotalResources_ >= ( 100.0f * BcF32( Idx ) ) && Miners_.size() < ( 2 * Idx ) )
+				{
+					GaUnitActionEvent Event;
+					Event.SourceUnit_ = Unit;
+					Event.TargetUnit_ = Unit;
+					getParentEntity()->publish( 0, Event );
+					MineWeight_ += Tick;
+					break;
+				}
+			}
+		}
+
+		// Control miners.
+		for( auto Miner : Miners_ )
+		{
+			// Send to mine if idle.
+			if( Miner->isIdle() && !Miner->isFull( 0.9f ) )
+			{
+				auto Asteroid = findAsteroid( 
+					[ Miner ]( GaAsteroidComponent* Asteroid )
+					{
+						auto Distance = ( Miner->getPosition() - Asteroid->getPosition() ).magnitude();
+						auto Z = Asteroid->getPosition().z();
+						if( Z < -24.0f || Z > 24.0f )
+						{
+							Z += 1e12f;
+						}
+
+						return -Distance - Z;
+					} );
+
+				if( Asteroid != nullptr )
+				{
+					auto Z = Asteroid->getPosition().z();
+					if( Z > -24.0f && Z < 24.0f )
+					{
+						GaUnitActionEvent Event;
+						Event.SourceUnit_ = Miner->getComponentByType< GaUnitComponent >();
+						Event.TargetUnit_ = Asteroid->getComponentByType< GaUnitComponent >();
+						Miner->getParentEntity()->publish( 0, Event );
+						ReturnWeight_ += Tick;
+					}
+				}
+			}
+			// Get returning if almost full.
+			else if( Miner->isIdle() && Miner->isFull( 0.9f ) )
+			{
+				GaUnitActionEvent Event;
+				Event.SourceUnit_ = Miner->getComponentByType< GaUnitComponent >();
+				Event.TargetUnit_ = Unit;
+				Miner->getParentEntity()->publish( 2, Event );
+				ReturnWeight_ += Tick;
+			}
+
+		}
+
+
 	}
 }
 
@@ -118,6 +203,7 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 			auto MinerComponent = MinerEntity0->getComponentByType< GaMinerComponent >();
 			BcAssert( MinerComponent );
 			MinerComponent->addNotifier( this );
+			Miners_.push_back( MinerComponent );
 
 			return evtRET_PASS;
 		} );
@@ -153,6 +239,25 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 			}
 			return evtRET_PASS;
 		} );
+
+	// Check for asteroids in parent.
+	for( auto Entity : getParentEntity()->getParentEntity()->getComponents() )
+	{
+		auto FieldComponent = Entity->getComponentByType< GaAsteroidFieldComponent >();
+		if( FieldComponent )
+		{
+			for( auto Component : FieldComponent->getParentEntity()->getComponents() )
+			{
+				auto Asteroid = Component->getComponentByType< GaAsteroidComponent >();
+				if( Asteroid )
+				{
+					Asteroids_.push_back( Asteroid );
+				}
+			}
+		}
+	}
+
+	PSY_LOG( "Added %u asteroids to mothership.", Asteroids_.size() );
 
 	// Cache transforms.
 	auto WorldMatrix = Parent->getWorldMatrix();
@@ -205,3 +310,42 @@ BcBool GaMothershipComponent::subResources( BcF32 Resources )
 	return BcFalse;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// findNearestAsteroid
+class GaAsteroidComponent* GaMothershipComponent::findNearestAsteroid( const MaVec3d& Position )
+{
+	class GaAsteroidComponent* Nearest = nullptr;
+	BcF32 NearestDistance = 1e6f;
+
+	for( auto Asteroid : Asteroids_ )
+	{
+		auto DistSqr = ( Asteroid->getParentEntity()->getWorldPosition() - Position ).magnitudeSquared();
+		if( DistSqr < NearestDistance )
+		{
+			Nearest = Asteroid;
+			NearestDistance = DistSqr;
+		}
+	}
+
+	return Nearest;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// findAsteroid
+class GaAsteroidComponent* GaMothershipComponent::findAsteroid( std::function< BcF32( class GaAsteroidComponent* ) > HeuristicFunc )
+{
+	class GaAsteroidComponent* Best = nullptr;
+	BcF32 BestHeuristic = -1e6f;
+
+	for( auto Asteroid : Asteroids_ )
+	{
+		auto H = HeuristicFunc( Asteroid );
+		if( H > BestHeuristic )
+		{
+			Best = Asteroid;
+			BestHeuristic = H;
+		}
+	}
+
+	return Best;
+}

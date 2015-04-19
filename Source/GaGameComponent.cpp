@@ -213,8 +213,8 @@ void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 
 	MaMat4d MothershipTransform0;
 	MaMat4d MothershipTransform1;
-	MothershipTransform0.translation( MaVec3d(  32.0f, 0.0f, 0.0f ) );
-	MothershipTransform1.translation( MaVec3d( -32.0f, 0.0f, 0.0f ) );
+	MothershipTransform0.translation( MaVec3d(  32.0f, -1.0f, 0.0f ) );
+	MothershipTransform1.translation( MaVec3d( -32.0f, -1.0f, 0.0f ) );
 
 	BcAssert( MothershipEntity_ );
 	{

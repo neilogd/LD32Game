@@ -21,6 +21,8 @@ public:
 	void setSize( BcF32 Size ) { Size_ = Size; }
 	BcF32 getSize() const { return Size_; }
 
+	MaVec3d getPosition() const { return getParentEntity()->getWorldPosition(); }
+
 private:
 	BcF32 MassSizeRatio_;
 	BcF32 Size_;

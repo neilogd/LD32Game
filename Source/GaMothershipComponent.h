@@ -24,6 +24,9 @@ public:
 	BcBool subResources( BcF32 Resources );
 	BcF32 getResources() const { return TotalResources_; }
 
+	class GaAsteroidComponent* findNearestAsteroid( const MaVec3d& Position );
+	class GaAsteroidComponent* findAsteroid( std::function< BcF32( class GaAsteroidComponent* ) > HeuristicFunc );
+
 private:
 	class ScnEntity* MinerEntity_;
 	BcF32 TotalResources_;
@@ -34,4 +37,10 @@ private:
 	std::vector< class GaAsteroidComponent* > Asteroids_;
 	std::vector< class GaMinerComponent* > Miners_;
 
+	// AI stuff.
+	BcF32 AttackWeight_;
+	BcF32 MineWeight_;
+	BcF32 BuildWeight_;
+	BcF32 RepairWeight_;
+	BcF32 ReturnWeight_;
 };
