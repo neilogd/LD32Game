@@ -19,7 +19,8 @@
 				"Content/Source/IconAccident.png",
 				"Content/Source/IconReturn.png",
 				"Content/Source/IconBuild.png",
-				"Content/Source/IconRepair.png"
+				"Content/Source/IconRepair.png",
+				"Content/Source/IconResources.png"
 			]
 		}
 	]
