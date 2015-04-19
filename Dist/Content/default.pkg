@@ -23,13 +23,13 @@
 
 				{
 					"type" : "ScnParticleSystemComponent",
-					"noofparticles" : 5000,
+					"noofparticles" : 1000,
 					"material" : "$(ScnMaterial:materials.particles_add)"
 				},
 
 				{
 					"type" : "ScnParticleSystemComponent",
-					"noofparticles" : 5000,
+					"noofparticles" : 1000,
 					"material" : "$(ScnMaterial:materials.particles_sub)"
 				},
 
