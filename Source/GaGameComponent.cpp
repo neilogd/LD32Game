@@ -136,21 +136,22 @@ void GaGameComponent::update( BcF32 Tick )
 			MaVec2d Position( Event.MouseX_, Event.MouseY_ );
 			GaUnitComponent* ClickedUnit = getUnitAt( Position );
 			// If we have clicked on a unit, we may need to determine the action also.
-			if( ClickedUnit != nullptr)
+			if( ClickedUnit != nullptr )
 			{
+				ClickedUnit->playSound( 3, "minor_impact1" );
 				BcBool PerformedAction = BcFalse;
 				if( SelectedUnit_ != nullptr )
 				{
 					auto Action = getAction( Event.ButtonCode_, ClickedUnit );
-
 					if( Action != nullptr )
 					{
+						SelectedUnit_->playSound( 3, "minor_impact1" );
+
 						PSY_LOG( "Sending action." );
 						GaUnitActionEvent Event;
 						Event.SourceUnit_ = SelectedUnit_;
 						Event.TargetUnit_ = ClickedUnit;
 						SelectedUnit_->getParentEntity()->publish( Action->ActionID_, Event );
-						SelectedUnit_->playSound( 3, "blip" );
 
 						PerformedAction = BcTrue;
 					}
@@ -165,8 +166,8 @@ void GaGameComponent::update( BcF32 Tick )
 						SelectedUnit_ = ClickedUnit;
 						if( SelectedUnit_ )
 						{
+							SelectedUnit_->playSound( 3, "minor_impact1" );
 							SelectedUnit_->addNotifier( this );
-							SelectedUnit_->playSound( 3, "blip" );
 						}
 					}
 				}

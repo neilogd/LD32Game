@@ -13,7 +13,7 @@
 			"type"			: "ScnSound",
 			"name"			: "blip",
 
-			"source"		: "Content/Source/Sound/blip.sfs",
+			"source"		: "Content/Source/Sound/blip.ogg",
 			"isstream"		: false,
 			"isloop"		: false
 		},

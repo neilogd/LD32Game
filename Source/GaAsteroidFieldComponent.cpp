@@ -152,7 +152,7 @@ void GaAsteroidFieldComponent::update( BcF32 Tick )
 		Particle->Rotation_ = 0.0f;
 		Particle->RotationMultiplier_ = 0.0f;
 		Particle->Colour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
-		Particle->MinColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+		Particle->MinColour_ = RsColour( 0.3f, 0.3f, 0.3f, 1.0f );
 		Particle->MaxColour_ = RsColour( 1.0f, 1.0f, 1.0f, 0.0f );
 		Particle->TextureIndex_ = 7;
 		Particle->CurrentTime_ = 0.0f;
