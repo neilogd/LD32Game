@@ -17,9 +17,15 @@ public:
 
 	void onAttach( ScnEntityWeakRef Parent ) override;
 
+	void addResources( BcF32 Resources );
+	BcBool subResources( BcF32 Resources );
+	
+
 private:
 	class ScnEntity* MinerEntity_;
+	BcF32 TotalResources_;
 
 	MaVec3d TargetPosition_;	
 	MaQuat TargetRotation_;
+
 };

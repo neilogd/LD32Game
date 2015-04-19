@@ -32,7 +32,7 @@ void GaGameComponent::StaticRegisterClass()
 	};
 
 	ReRegisterClass< GaGameComponent, Super >( Fields )
-		.addAttribute( new ScnComponentAttribute( 0 ) );
+		.addAttribute( new ScnComponentAttribute( -1 ) );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -130,7 +130,6 @@ void GaGameComponent::update( BcF32 Tick )
 		Canvas_->drawSpriteCentered( Position, MaVec2d( IconSize, IconSize ), (BcU32)GaGameIcon::SELECT, RsColour::GREEN, 90 );
 	}
 	
-
 	for( const auto& EventPair : MouseEvents_ )
 	{
 		auto ID = EventPair.first;
@@ -176,13 +175,6 @@ void GaGameComponent::update( BcF32 Tick )
 
 	}
 	MouseEvents_.clear();
-
-	if( SelectedUnit_ != nullptr )
-	{
-		ScnDebugRenderComponent::pImpl()->drawEllipsoid( SelectedUnit_->getParentEntity()->getWorldPosition(), MaVec3d( 3.0f, 3.0f, 3.0f ), RsColour::RED, 0 );
-	}
-
-	Canvas_->popMatrix();
 }
 
 //////////////////////////////////////////////////////////////////////////

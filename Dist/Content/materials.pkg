@@ -76,7 +76,14 @@
 				"blendstate" : {
 					"rendertarget" : [
 						{
-							"enable" : false
+							"enable" : true,
+							"srcblend" : "one",
+							"destblend" : "one",
+							"blendop" : "add",
+							"srcblendalpha" : "one",
+							"destblendalpha" : "one",
+							"blendopalpha" : "add",
+							"writemask" : 15
 						}
 					]
 				},

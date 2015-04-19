@@ -22,12 +22,14 @@ void GaMinerComponent::StaticRegisterClass()
 		new ReField( "MaxForce_", &GaMinerComponent::MaxForce_, bcRFF_IMPORTER ),
 		new ReField( "MiningDistance_", &GaMinerComponent::MiningDistance_, bcRFF_IMPORTER ),
 		new ReField( "MiningRate_", &GaMinerComponent::MiningRate_, bcRFF_IMPORTER ),
+		new ReField( "MaxCapacity_", &GaMinerComponent::MaxCapacity_, bcRFF_IMPORTER ),
 		new ReField( "MiningSizeThreshold_", &GaMinerComponent::MiningSizeThreshold_, bcRFF_IMPORTER ),
 
 		new ReField( "State_", &GaMinerComponent::State_, bcRFF_TRANSIENT ),
 		new ReField( "CirclingTimer_", &GaMinerComponent::CirclingTimer_, bcRFF_TRANSIENT ),
 		new ReField( "TargetPosition_", &GaMinerComponent::TargetPosition_, bcRFF_TRANSIENT ),
 		new ReField( "Target_", &GaMinerComponent::Target_, bcRFF_TRANSIENT ),
+		new ReField( "AmountMined_", &GaMinerComponent::AmountMined_, bcRFF_TRANSIENT ),
 	};
 	
 	ReRegisterClass< GaMinerComponent, Super >( Fields )
@@ -43,9 +45,11 @@ GaMinerComponent::GaMinerComponent():
 	MiningDistance_( 4.0f ),
 	MiningSizeThreshold_( 0.1f ),
 	MiningRate_( 0.1f ),
+	MaxCapacity_( 2.0f ),
 	CirclingTimer_( 0.0f ),
 	TargetPosition_( 0.0f, 0.0f, 0.0f ),
-	Target_( nullptr )
+	Target_( nullptr ),
+	AmountMined_( 0.0f )
 {
 
 }
@@ -105,12 +109,8 @@ void GaMinerComponent::update( BcF32 Tick )
 		{
 			auto ForceAmount = Displacement.normal() * MaxForce_ * RigidBody->getMass();
 			RigidBody->applyCentralForce( ForceAmount );
-
-			ScnDebugRenderComponent::pImpl()->drawLine( 
-				Position,
-				Position + ForceAmount * 0.025f,
-				RsColour::RED,
-				0 );
+			
+			// TODO: Draw thruster in opposite direction.
 		}
 
 		if( State_ == State::MINING )
@@ -127,16 +127,47 @@ void GaMinerComponent::update( BcF32 Tick )
 				auto Asteroid = Target_->getComponentByType< GaAsteroidComponent >();
 				BcAssert( Asteroid );
 
-				auto Size = Asteroid->getSize();
-				Size -= Tick * MiningRate_;
-				Asteroid->setSize( Size );
+				if( AmountMined_ < MaxCapacity_ )
+				{
+					auto Size = Asteroid->getSize();
+					auto AmountMined = Tick * MiningRate_;
+					Size -= AmountMined;
+					AmountMined_ += AmountMined;
+					Asteroid->setSize( Size );
 
-				// Return when asteroid is deaded, or TODO we are full.
-				if( Size < MiningSizeThreshold_ )
+					// Return when asteroid is deaded, or TODO we are full.
+					if( Size < MiningSizeThreshold_ )
+					{
+						Target_ = nullptr;
+						State_ = State::IDLE;
+
+						// TODO: Notify done.
+					}
+				}
+				else
 				{
 					Target_ = nullptr;
 					State_ = State::IDLE;
+
+					// TODO: notify Returning.
 				}
+			}
+		}
+		else if( State_ == State::RETURNING )
+		{
+			if( DisplacementMag < ( MiningDistance_ * 1.1f ) )
+			{
+				auto Mothership = Target_->getComponentByType< GaMothershipComponent >();
+				BcAssert( Mothership );
+
+				if( AmountMined_ > 0.0f )
+				{
+					auto AmountMined = std::min( AmountMined_, Tick * MiningRate_ );
+					Mothership->addResources( AmountMined );
+					AmountMined_ -= AmountMined;
+				}
+				Target_ = nullptr;
+				State_ = State::IDLE;
 			}
 		}
 
@@ -233,8 +264,8 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 								auto ShipPosition = ShipUnit->getParentEntity()->getLocalPosition();
 								auto Displacement = ShipPosition - AsteroidPosition;
 
-								// Apply impulse based on our *own* mass.
-								AsteroidRigidBody->applyCentralImpulse( Displacement.normal() * Event.BodyA_->getMass() );
+								// Apply impulse based on our *own* mass + amount mined..
+								AsteroidRigidBody->applyCentralImpulse( Displacement.normal() * ( Event.BodyA_->getMass() + AmountMined_ * 10.0f ) );
 
 								// Remove ourself.
 								ScnCore::pImpl()->removeEntity( getParentEntity() );

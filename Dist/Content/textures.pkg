@@ -15,7 +15,11 @@
 				"Content/Source/IconLMB.png",
 				"Content/Source/IconRMB.png",
 				"Content/Source/IconSelect.png",
-				"Content/Source/IconDrill.png"
+				"Content/Source/IconDrill.png",
+				"Content/Source/IconAccident.png",
+				"Content/Source/IconReturn.png",
+				"Content/Source/IconBuild.png",
+				"Content/Source/IconRepair.png"
 			]
 		}
 	]

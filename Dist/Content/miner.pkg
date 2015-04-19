@@ -24,7 +24,8 @@
 
 					"maxvelocity" : 20.0,
 					"maxforce" : 12.0,
-					"miningdistance" : 4.0
+					"miningdistance" : 4.0,
+					"maxcapacity" : 2.0
 				},
 
 				{
@@ -47,7 +48,7 @@
 						{
 							"name" : "Accident",
 							"description" : "Accidentally make asteroid hit competitor.",
-							"icon" : 3,
+							"icon" : 4,
 							"actionid" : 1,
 							"mousebutton" : 1,
 							"cost" : 0,
@@ -59,7 +60,7 @@
 						{
 							"name" : "Return",
 							"description" : "Return to mothership.",
-							"icon" : 3,
+							"icon" : 5,
 							"actionid" : 2,
 							"mousebutton" : 1,
 							"cost" : 0,

@@ -31,7 +31,7 @@
 					"type"					: "ScnCanvasComponent",
 					"noofvertices" 			: 8192,
 					"rendermask"			: 1,
-					"clear"					: true
+					"clear"					: false
 				},
 
 				{

@@ -22,6 +22,7 @@ private:
 	BcF32 MaxForce_;
 	BcF32 MiningDistance_;
 	BcF32 MiningRate_;
+	BcF32 MaxCapacity_;
 	BcF32 MiningSizeThreshold_;
 
 	enum class State
@@ -37,4 +38,6 @@ private:
 	BcF32 CirclingTimer_;
 	MaVec3d TargetPosition_;
 	class GaUnitComponent* Target_;
+
+	BcF32 AmountMined_;
 };

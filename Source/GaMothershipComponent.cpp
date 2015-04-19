@@ -16,7 +16,8 @@ void GaMothershipComponent::StaticRegisterClass()
 {
 	ReField* Fields[] = 
 	{
-		new ReField( "MinerEntity_", &GaMothershipComponent::MinerEntity_, bcRFF_SHALLOW_COPY | bcRFF_IMPORTER )
+		new ReField( "MinerEntity_", &GaMothershipComponent::MinerEntity_, bcRFF_SHALLOW_COPY | bcRFF_IMPORTER ),
+		new ReField( "TotalResources_", &GaMothershipComponent::TotalResources_, bcRFF_IMPORTER )
 	};
 
 	ReRegisterClass< GaMothershipComponent, Super >( Fields )
@@ -26,7 +27,8 @@ void GaMothershipComponent::StaticRegisterClass()
 //////////////////////////////////////////////////////////////////////////
 // Ctor
 GaMothershipComponent::GaMothershipComponent():
-	MinerEntity_( nullptr )
+	MinerEntity_( nullptr ),
+	TotalResources_( 0.0f )
 {
 
 }
@@ -147,4 +149,23 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 	TargetPosition_ = WorldMatrix.translation();
 	TargetRotation_.fromMatrix4d( WorldMatrix );
 	Super::onAttach( Parent );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// addResources
+void GaMothershipComponent::addResources( BcF32 Resources )
+{
+	TotalResources_ += Resources;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// subResources
+BcBool GaMothershipComponent::subResources( BcF32 Resources )
+{
+	if( TotalResources_ > Resources )
+	{
+		TotalResources_ -= Resources;
+		return BcTrue;
+	}
+	return BcFalse;
 }
