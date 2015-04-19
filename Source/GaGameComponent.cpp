@@ -270,7 +270,7 @@ class GaUnitComponent* GaGameComponent::getUnitAt( MaVec2d& MousePosition )
 
 	GaUnitComponent* ClickedUnit = nullptr;
 	ScnPhysicsLineCastResult Result;
-	if( World_->lineCast( Near, Far, &Result ) )
+	if( World_->sphereCast( Near, Far, 1.0f, &Result ) )
 	{
 		auto Entity = Result.Entity_;
 		auto Unit = Entity->getComponentByType< GaUnitComponent >();

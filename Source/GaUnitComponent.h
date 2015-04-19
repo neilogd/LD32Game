@@ -1,5 +1,6 @@
 #pragma once
 #include "Psybrus.h"
+#include "System/Renderer/RsTypes.h"
 
 //////////////////////////////////////////////////////////////////////////
 // GaUnitAction
@@ -31,6 +32,11 @@ struct GaUnitActionEvent : public EvtEvent< GaUnitActionEvent >
 class GaUnitComponent:
 	public ScnComponent
 {
+public:
+	static const BcF32 RADAR_GROUND_Y;
+	static const RsColour RADAR_COLOUR;
+	static const RsColour RADAR_COLOUR_ATTACK;
+
 public:
 	REFLECTION_DECLARE_DERIVED( GaUnitComponent, ScnComponent );
 

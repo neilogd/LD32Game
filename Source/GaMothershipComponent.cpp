@@ -1,6 +1,8 @@
 #include "GaMothershipComponent.h"
 #include "GaAsteroidComponent.h"
+#include "GaMinerComponent.h"
 #include "GaUnitComponent.h"
+
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Physics/ScnPhysicsRigidBodyComponent.h"
@@ -17,9 +19,13 @@ void GaMothershipComponent::StaticRegisterClass()
 	ReField* Fields[] = 
 	{
 		new ReField( "MinerEntity_", &GaMothershipComponent::MinerEntity_, bcRFF_SHALLOW_COPY | bcRFF_IMPORTER ),
-		new ReField( "TotalResources_", &GaMothershipComponent::TotalResources_, bcRFF_IMPORTER )
-	};
+		new ReField( "TotalResources_", &GaMothershipComponent::TotalResources_, bcRFF_IMPORTER ),
 
+		new ReField( "TargetPosition_", &GaMothershipComponent::TargetPosition_, bcRFF_TRANSIENT ),
+		new ReField( "TargetRotation_", &GaMothershipComponent::TotalResources_, bcRFF_TRANSIENT ),
+		new ReField( "Asteroids_", &GaMothershipComponent::Asteroids_, bcRFF_TRANSIENT ),
+		new ReField( "Miners_", &GaMothershipComponent::Miners_, bcRFF_TRANSIENT ),
+	};
 	ReRegisterClass< GaMothershipComponent, Super >( Fields )
 		.addAttribute( new ScnComponentAttribute( 0 ) );
 }
@@ -109,6 +115,10 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 			auto MinerUnit = MinerEntity0->getComponentByType< GaUnitComponent >();
 			MinerUnit->setTeam( getComponentByType< GaUnitComponent >()->getTeam() );
 
+			auto MinerComponent = MinerEntity0->getComponentByType< GaMinerComponent >();
+			BcAssert( MinerComponent );
+			MinerComponent->addNotifier( this );
+
 			return evtRET_PASS;
 		} );
 
@@ -152,6 +162,31 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 }
 
 //////////////////////////////////////////////////////////////////////////
+// onObjectDeleted
+void GaMothershipComponent::onObjectDeleted( class ReObject* Object )
+{
+	auto FoundMiner = std::find_if( Miners_.begin(), Miners_.end(),
+		[ Object ]( GaMinerComponent* Miner )
+		{
+			return Object == Miner;
+		} );
+	auto FoundAsteroid = std::find_if( Asteroids_.begin(), Asteroids_.end(),
+		[ Object ]( GaAsteroidComponent* Asteroid )
+		{
+			return Object == Asteroid;
+		} );
+
+	if( FoundMiner != Miners_.end() )
+	{
+		Miners_.erase( FoundMiner );
+	}
+	if( FoundAsteroid != Asteroids_.end() )
+	{
+		Asteroids_.erase( FoundAsteroid );
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
 // addResources
 void GaMothershipComponent::addResources( BcF32 Resources )
 {
@@ -169,3 +204,4 @@ BcBool GaMothershipComponent::subResources( BcF32 Resources )
 	}
 	return BcFalse;
 }
+

@@ -68,6 +68,9 @@ GaMinerComponent::~GaMinerComponent()
 // update
 void GaMinerComponent::update( BcF32 Tick )
 {
+	auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
+	auto Position = RigidBody->getPosition();
+
 	ScnDebugRenderComponent::pImpl()->drawLine( 
 		MaVec3d( -100.0f, 0.0f, -MaxExtents_ ),
 		MaVec3d(  100.0f, 0.0f, -MaxExtents_ ),
@@ -80,6 +83,25 @@ void GaMinerComponent::update( BcF32 Tick )
 		RsColour::YELLOW,
 		0 );
 
+	ScnPhysicsRigidBodyComponent* TargetRigidBody = nullptr;
+	if( Target_ != nullptr )
+	{
+		TargetRigidBody = Target_->getComponentByType< ScnPhysicsRigidBodyComponent >();
+		auto TargetRigidBodyPosition = TargetRigidBody->getPosition();
+
+		RsColour Colour = GaUnitComponent::RADAR_COLOUR;
+		if( State_ == State::ACCIDENTING )
+		{
+			Colour = GaUnitComponent::RADAR_COLOUR_ATTACK;
+		}
+
+		ScnDebugRenderComponent::pImpl()->drawLine( 
+			MaVec3d( TargetRigidBodyPosition.x(), GaUnitComponent::RADAR_GROUND_Y, TargetRigidBodyPosition.z() ),
+			MaVec3d( Position.x(), GaUnitComponent::RADAR_GROUND_Y, Position.z() ),
+			Colour,
+			0 );
+	}
+
 	switch( State_ )
 	{
 	case State::IDLE:
@@ -90,21 +112,21 @@ void GaMinerComponent::update( BcF32 Tick )
 
 	case State::MINING:
 		{
-			auto TargetRigidBody = Target_->getComponentByType< ScnPhysicsRigidBodyComponent >();
+			BcAssert( TargetRigidBody );
 			TargetPosition_ = TargetRigidBody->getPosition() + MaVec3d( BcCos( CirclingTimer_ ), 1.0f, BcSin( CirclingTimer_ ) ).normal() * MiningDistance_;
 		}
 		break;
 
 	case State::ACCIDENTING:
 		{
-			auto TargetRigidBody = Target_->getComponentByType< ScnPhysicsRigidBodyComponent >();
+			BcAssert( TargetRigidBody );
 			TargetPosition_ = TargetRigidBody->getPosition();
 		}
 		break;
 
 	case State::RETURNING:
 		{
-			auto TargetRigidBody = Target_->getComponentByType< ScnPhysicsRigidBodyComponent >();
+			BcAssert( TargetRigidBody );
 			TargetPosition_ = TargetRigidBody->getPosition() + MaVec3d( 0.0f, 3.0f, 0.0f );
 		}
 		break;
@@ -112,10 +134,6 @@ void GaMinerComponent::update( BcF32 Tick )
 
 	// Movement handling.
 	BcF32 Damping = 0.0f;
-	auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
-	auto Position = RigidBody->getPosition();
-
-
 	auto Displacement = TargetPosition_ - Position;
 	auto DisplacementMag = Displacement.magnitude();
 	if( DisplacementMag > 2.0f )
@@ -327,4 +345,16 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 void GaMinerComponent::onDetach( ScnEntityWeakRef Parent )
 {
 	Super::onDetach( Parent );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// onDetach
+void GaMinerComponent::onObjectDeleted( class ReObject* Object )
+{
+	if( Object == Target_ )
+	{
+		// TODO: notify.
+		Target_ = nullptr;
+		State_ = State::IDLE;
+	}
 }

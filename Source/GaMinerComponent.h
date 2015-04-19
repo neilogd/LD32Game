@@ -4,7 +4,8 @@
 //////////////////////////////////////////////////////////////////////////
 // GaMinerComponent
 class GaMinerComponent:
-	public ScnComponent
+	public ScnComponent,
+	public ReIObjectNotify
 {
 public:
 	REFLECTION_DECLARE_DERIVED( GaMinerComponent, ScnComponent );
@@ -16,6 +17,8 @@ public:
 
 	void onAttach( ScnEntityWeakRef Parent ) override;
 	void onDetach( ScnEntityWeakRef Parent ) override;
+
+	void onObjectDeleted( class ReObject* Object ) override;
 
 private:
 	BcF32 MaxVelocity_;

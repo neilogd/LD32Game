@@ -36,6 +36,8 @@ public:
 
 	BcBool isUnitSelectable( class GaUnitComponent* Unit );
 
+	
+
 private:
 	class ScnEntity* MothershipEntity_;
 	class ScnMaterial* UIMaterial_;

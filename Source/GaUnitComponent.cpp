@@ -3,6 +3,12 @@
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
+// Constants.
+const BcF32 GaUnitComponent::RADAR_GROUND_Y = -2.0f;
+const RsColour GaUnitComponent::RADAR_COLOUR( 0.0f, 1.0f, 0.0f, 0.5f );
+const RsColour GaUnitComponent::RADAR_COLOUR_ATTACK( 1.0f, 0.0f, 0.0f, 0.5f );
+
+//////////////////////////////////////////////////////////////////////////
 // Define resource internals.
 REFLECTION_DEFINE_BASIC( GaUnitAction );
 
@@ -74,8 +80,8 @@ GaUnitComponent::~GaUnitComponent()
 void GaUnitComponent::update( BcF32 Tick )
 {
 	auto Position = getParentEntity()->getWorldPosition();
-	auto GroundPosition = MaVec3d( Position.x(), -2.0f, Position.z() );
+	auto GroundPosition = MaVec3d( Position.x(), RADAR_GROUND_Y, Position.z() );
 
-	ScnDebugRenderComponent::pImpl()->drawLine( Position, GroundPosition, RsColour( 0.0f, 1.0f, 0.0f, 0.5f ), 0 );
-	ScnDebugRenderComponent::pImpl()->drawCircle( GroundPosition, MaVec3d( 0.5f, 0.5f, 0.5f ), RsColour( 0.0f, 1.0f, 0.0f, 0.5f ), 0 );
+	ScnDebugRenderComponent::pImpl()->drawLine( Position, GroundPosition, RADAR_COLOUR, 0 );
+	ScnDebugRenderComponent::pImpl()->drawCircle( GroundPosition, MaVec3d( 0.5f, 0.5f, 0.5f ), RADAR_COLOUR, 0 );
 }

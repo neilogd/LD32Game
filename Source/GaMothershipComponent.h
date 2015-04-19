@@ -5,7 +5,8 @@
 //////////////////////////////////////////////////////////////////////////
 // GaMothershipComponent
 class GaMothershipComponent:
-	public ScnComponent
+	public ScnComponent,
+	public ReIObjectNotify
 {
 public:
 	REFLECTION_DECLARE_DERIVED( GaMothershipComponent, ScnComponent );
@@ -17,9 +18,11 @@ public:
 
 	void onAttach( ScnEntityWeakRef Parent ) override;
 
+	void onObjectDeleted( class ReObject* Object ) override;
+
 	void addResources( BcF32 Resources );
 	BcBool subResources( BcF32 Resources );
-	
+	BcF32 getResources() const { return TotalResources_; }
 
 private:
 	class ScnEntity* MinerEntity_;
@@ -27,5 +30,8 @@ private:
 
 	MaVec3d TargetPosition_;	
 	MaQuat TargetRotation_;
+
+	std::vector< class GaAsteroidComponent* > Asteroids_;
+	std::vector< class GaMinerComponent* > Miners_;
 
 };
