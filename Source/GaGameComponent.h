@@ -47,6 +47,9 @@ private:
 	class ScnPhysicsWorldComponent* World_;
 	class ScnCanvasComponent* Canvas_;
 
+	class GaMothershipComponent* PlayerShip_;
+	class GaMothershipComponent* EnemyShip_;
+
 	MaVec2d MousePosition_;
 
 	class GaUnitComponent* SelectedUnit_;

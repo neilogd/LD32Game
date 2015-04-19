@@ -72,7 +72,9 @@
 #include "GaAsteroidComponent.h"
 #include "GaAsteroidFieldComponent.h"
 #include "GaCameraComponent.h"
+#include "GaFlowComponent.h"
 #include "GaGameComponent.h"
+#include "GaIntroComponent.h"
 #include "GaMinerComponent.h"
 #include "GaMothershipComponent.h"
 #include "GaSceneComponent.h"
@@ -171,7 +173,9 @@ void AutoGenRegisterReflection()
 	GaAsteroidComponent::StaticRegisterClass();
 	GaAsteroidFieldComponent::StaticRegisterClass();
 	GaCameraComponent::StaticRegisterClass();
+	GaFlowComponent::StaticRegisterClass();
 	GaGameComponent::StaticRegisterClass();
+	GaIntroComponent::StaticRegisterClass();
 	GaMinerComponent::StaticRegisterClass();
 	GaMothershipComponent::StaticRegisterClass();
 	GaSceneComponent::StaticRegisterClass();

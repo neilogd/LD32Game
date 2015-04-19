@@ -223,32 +223,34 @@ void GaAsteroidFieldComponent::recycle( GaAsteroidComponent* Asteroid, BcBool Se
 	ScnCore::pImpl()->subscribe( sysEVT_SYSTEM_POST_UPDATE, this,
 		[ this, Asteroid, SetPosition ]( EvtID, const EvtBaseEvent& )->eEvtReturn
 		{
-			auto Unit = Asteroid->getComponentByType< GaUnitComponent >();
-			Unit->setupShadow();
-			auto RigidBody = Asteroid->getComponentByType< ScnPhysicsRigidBodyComponent >();
-			auto Position = RigidBody->getPosition();
-			auto Size = BcRandom::Global.randRealRange( MinSize_, MaxSize_ );
-			Asteroid->setSize( Size );
-
-			if( SetPosition )
+			if( Asteroid->getParentEntity() != nullptr )
 			{
-				MaVec3d NewPosition = MaVec3d(
-					BcRandom::Global.randRealRange( -Width_, Width_ ),
-					0.0f,
-					-MaxExtents_ + 0.05f );
-				RigidBody->translate( -Position + NewPosition );
-				Asteroid->getParentEntity()->setLocalPosition( RigidBody->getPosition() );
+				auto Unit = Asteroid->getComponentByType< GaUnitComponent >();
+				Unit->setupShadow();
+				auto RigidBody = Asteroid->getComponentByType< ScnPhysicsRigidBodyComponent >();
+				auto Position = RigidBody->getPosition();
+				auto Size = BcRandom::Global.randRealRange( MinSize_, MaxSize_ );
+				Asteroid->setSize( Size );
+
+				if( SetPosition )
+				{
+					MaVec3d NewPosition = MaVec3d(
+						BcRandom::Global.randRealRange( -Width_, Width_ ),
+						0.0f,
+						-MaxExtents_ + 0.05f );
+					RigidBody->translate( -Position + NewPosition );
+					Asteroid->getParentEntity()->setLocalPosition( RigidBody->getPosition() );
+				}
+
+				const BcF32 AngularRange = 1.0f;
+				RigidBody->setAngularVelocity( MaVec3d( 
+					BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
+					BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
+					BcRandom::Global.randRealRange( -AngularRange, AngularRange ) ) );
+
+				auto Velocity = BcRandom::Global.randRealRange( MinVelocity_, MaxVelocity_ );
+				RigidBody->setLinearVelocity( MaVec3d( 0.0f, 0.0f, Velocity ) );
 			}
-
-			const BcF32 AngularRange = 1.0f;
-			RigidBody->setAngularVelocity( MaVec3d( 
-				BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
-				BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
-				BcRandom::Global.randRealRange( -AngularRange, AngularRange ) ) );
-
-			auto Velocity = BcRandom::Global.randRealRange( MinVelocity_, MaxVelocity_ );
-			RigidBody->setLinearVelocity( MaVec3d( 0.0f, 0.0f, Velocity ) );
-
 			return evtRET_REMOVE;
 		} );
 

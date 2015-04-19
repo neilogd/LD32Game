@@ -134,7 +134,7 @@ void GaMinerComponent::update( BcF32 Tick )
 			{
 				if( PulseTimer_ < 0.0f )
 				{
-					PulseTimer_ = 0.4f;
+					PulseTimer_ = 0.3f;
 					ScnParticle* Particle = nullptr;
 					if( ParticlesAdd_->allocParticle( Particle ) )
 					{
@@ -143,11 +143,11 @@ void GaMinerComponent::update( BcF32 Tick )
 						Particle->Acceleration_ = MaVec3d( 0.0f, 0.0f, 0.0f );
 						Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
 						Particle->MinScale_ = MaVec2d( 3.2f, 3.2f );
-						Particle->MaxScale_ = MaVec2d( 10.5f, 10.5f );
+						Particle->MaxScale_ = MaVec2d( 15.5f, 15.5f );
 						Particle->Rotation_ = BcRandom::Global.randReal();
 						Particle->RotationMultiplier_ = BcRandom::Global.randReal() * 2.0f;
 						Particle->Colour_ = RsColour( 1.0f, 1.0f, 0.0f, 1.0f );
-						Particle->MinColour_ = RsColour( 1.0f, 0.5f, 0.0f, 1.0f );
+						Particle->MinColour_ = RsColour( 1.0f, 0.8f, 0.0f, 1.0f );
 						Particle->MaxColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
 						Particle->TextureIndex_ = 8;
 						Particle->CurrentTime_ = 0.0f;

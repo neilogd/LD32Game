@@ -1,7 +1,7 @@
 #include "GaGameComponent.h"
+#include "GaMothershipComponent.h"
 #include "GaUnitComponent.h"
 
-#include "System/Content/CsCore.h"
 #include "System/Content/CsPackage.h"
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
@@ -46,6 +46,8 @@ GaGameComponent::GaGameComponent():
 	View_( nullptr ),
 	World_( nullptr ),
 	Canvas_( nullptr ),
+	PlayerShip_( nullptr ),
+	EnemyShip_( nullptr ),
 	MousePosition_( 0.0f, 0.0f ),
 	SelectedUnit_( nullptr ),
 	MouseEvents_()
@@ -66,123 +68,116 @@ GaGameComponent::~GaGameComponent()
 //virtual
 void GaGameComponent::update( BcF32 Tick )
 {
-	// Get projection for UI.
-	OsClient* Client = OsCore::pImpl()->getClient( 0 );
-	BcF32 HalfWidth = static_cast< BcF32 >( Client->getWidth() / 2 );
-	BcF32 HalfHeight = static_cast< BcF32 >( Client->getHeight() / 2 );
-
-	MaMat4d UIProjection;
-	UIProjection.orthoProjection( -HalfWidth, HalfWidth, HalfHeight, -HalfHeight, -1.0f, 1.0f );
-
-	Canvas_->clear();
-	Canvas_->pushMatrix( UIProjection );
 	Canvas_->setMaterialComponent( UIMaterialComponent_ );
 
 	BcAssert( View_ != nullptr );
 	BcAssert( World_ != nullptr );
 	BcF32 IconSize = 64.0f;
 
-	// Check hover.
+	if( PlayerShip_->getHull() > 0.0f )
 	{
-
-		GaUnitComponent* HoverUnit = getUnitAt( MousePosition_ );
-		if( HoverUnit != nullptr )
+		// Check hover.
 		{
-			auto Position = View_->getScreenPosition( HoverUnit->getParentEntity()->getWorldPosition() );
 
-			BcU32 NoofActions = 0;
-			std::array< const struct GaUnitAction*, 3 > Actions;				
-			for( BcU32 MouseButton = 0; MouseButton < Actions.size(); ++MouseButton )
+			GaUnitComponent* HoverUnit = getUnitAt( MousePosition_ );
+			if( HoverUnit != nullptr )
 			{
-				auto Action = getAction( MouseButton, HoverUnit );
-				if( Action )
+				auto Position = View_->getScreenPosition( HoverUnit->getParentEntity()->getWorldPosition() );
+
+				BcU32 NoofActions = 0;
+				std::array< const struct GaUnitAction*, 3 > Actions;				
+				for( BcU32 MouseButton = 0; MouseButton < Actions.size(); ++MouseButton )
 				{
-					Actions[ NoofActions++ ] = Action;
-				}
-			}
-
-			MaVec2d Offsets[3] =
-			{
-				MaVec2d( -IconSize, 0.0f ),
-				MaVec2d( IconSize, 0.0f ),
-				MaVec2d( 0.0f, 0.0f )
-			};
-
-			for( BcU32 Idx = 0; Idx < NoofActions; ++Idx )
-			{
-				auto Action = Actions[ Idx ];
-				auto Offset = Offsets[ Action->MouseButton_ ];
-				Canvas_->drawSpriteCentered( Position + Offset - MaVec2d( 0.0f, IconSize ), MaVec2d( IconSize, IconSize ), Action->MouseButton_, RsColour::GREEN, 100 );
-				Canvas_->drawSpriteCentered( Position + Offset, MaVec2d( IconSize, IconSize ), Action->Icon_, RsColour::GREEN, 100 );
-			}
-
-			// Hover selection.
-			if( NoofActions == 0 || SelectedUnit_ == nullptr )
-			{
-				// Selectable? Draw that thing.
-				if( isUnitSelectable( HoverUnit ) )
-				{
-					Canvas_->drawSpriteCentered( Position, MaVec2d( IconSize, IconSize ), (BcU32)GaGameIcon::SELECT, RsColour::GREEN, 100 );
-				}
-			}
-		}
-	}
-
-	if( SelectedUnit_ != nullptr )
-	{
-		auto Position = View_->getScreenPosition( SelectedUnit_->getParentEntity()->getWorldPosition() );
-		Canvas_->drawSpriteCentered( Position, MaVec2d( IconSize, IconSize ), (BcU32)GaGameIcon::SELECT, RsColour::GREEN, 90 );
-	}
-	
-	for( const auto& EventPair : MouseEvents_ )
-	{
-		auto ID = EventPair.first;
-		const auto& Event = EventPair.second;
-
-		MaVec2d Position( Event.MouseX_, Event.MouseY_ );
-		GaUnitComponent* ClickedUnit = getUnitAt( Position );
-		// If we have clicked on a unit, we may need to determine the action also.
-		if( ClickedUnit != nullptr)
-		{
-			BcBool PerformedAction = BcFalse;
-			if( SelectedUnit_ != nullptr )
-			{
-				auto Action = getAction( Event.ButtonCode_, ClickedUnit );
-
-				if( Action != nullptr )
-				{
-					PSY_LOG( "Sending action." );
-					GaUnitActionEvent Event;
-					Event.SourceUnit_ = SelectedUnit_;
-					Event.TargetUnit_ = ClickedUnit;
-					SelectedUnit_->getParentEntity()->publish( Action->ActionID_, Event );
-					SelectedUnit_->playSound( 3, "blip" );
-
-					PerformedAction = BcTrue;
-				}
-			}
-
-			// No action? Reselect.
-			if( isUnitSelectable( ClickedUnit ) )
-			{
-				if( PerformedAction == BcFalse )
-				{
-					if( SelectedUnit_ ) SelectedUnit_->removeNotifier( this );
-					SelectedUnit_ = ClickedUnit;
-					if( SelectedUnit_ )
+					auto Action = getAction( MouseButton, HoverUnit );
+					if( Action )
 					{
-						SelectedUnit_->addNotifier( this );
-						SelectedUnit_->playSound( 3, "blip" );
+						Actions[ NoofActions++ ] = Action;
+					}
+				}
+
+				MaVec2d Offsets[3] =
+				{
+					MaVec2d( -IconSize, 0.0f ) * 0.6f,
+					MaVec2d( IconSize, 0.0f ) * 0.6f,
+					MaVec2d( 0.0f, 0.0f )
+				};
+
+				for( BcU32 Idx = 0; Idx < NoofActions; ++Idx )
+				{
+					auto Action = Actions[ Idx ];
+					auto Offset = Offsets[ Action->MouseButton_ ];
+					Canvas_->drawSpriteCentered( Position + Offset - MaVec2d( 0.0f, IconSize ), MaVec2d( IconSize, IconSize ), Action->MouseButton_, RsColour::GREEN, 100 );
+					Canvas_->drawSpriteCentered( Position + Offset, MaVec2d( IconSize, IconSize ), Action->Icon_, RsColour::GREEN, 100 );
+				}
+
+				// Hover selection.
+				if( NoofActions == 0 || SelectedUnit_ == nullptr )
+				{
+					// Selectable? Draw that thing.
+					if( isUnitSelectable( HoverUnit ) )
+					{
+						Canvas_->drawSpriteCentered( Position, MaVec2d( IconSize, IconSize ), (BcU32)GaGameIcon::SELECT, RsColour::GREEN, 100 );
 					}
 				}
 			}
 		}
-		else
-		{
-			if( SelectedUnit_ ) SelectedUnit_->removeNotifier( this );
-			SelectedUnit_ = nullptr;
-		}
 
+		if( SelectedUnit_ != nullptr )
+		{
+			auto Position = View_->getScreenPosition( SelectedUnit_->getParentEntity()->getWorldPosition() );
+			Canvas_->drawSpriteCentered( Position, MaVec2d( IconSize, IconSize ), (BcU32)GaGameIcon::SELECT, RsColour::GREEN, 90 );
+		}
+		
+		for( const auto& EventPair : MouseEvents_ )
+		{
+			auto ID = EventPair.first;
+			const auto& Event = EventPair.second;
+
+			MaVec2d Position( Event.MouseX_, Event.MouseY_ );
+			GaUnitComponent* ClickedUnit = getUnitAt( Position );
+			// If we have clicked on a unit, we may need to determine the action also.
+			if( ClickedUnit != nullptr)
+			{
+				BcBool PerformedAction = BcFalse;
+				if( SelectedUnit_ != nullptr )
+				{
+					auto Action = getAction( Event.ButtonCode_, ClickedUnit );
+
+					if( Action != nullptr )
+					{
+						PSY_LOG( "Sending action." );
+						GaUnitActionEvent Event;
+						Event.SourceUnit_ = SelectedUnit_;
+						Event.TargetUnit_ = ClickedUnit;
+						SelectedUnit_->getParentEntity()->publish( Action->ActionID_, Event );
+						SelectedUnit_->playSound( 3, "blip" );
+
+						PerformedAction = BcTrue;
+					}
+				}
+
+				// No action? Reselect.
+				if( isUnitSelectable( ClickedUnit ) )
+				{
+					if( PerformedAction == BcFalse )
+					{
+						if( SelectedUnit_ ) SelectedUnit_->removeNotifier( this );
+						SelectedUnit_ = ClickedUnit;
+						if( SelectedUnit_ )
+						{
+							SelectedUnit_->addNotifier( this );
+							SelectedUnit_->playSound( 3, "blip" );
+						}
+					}
+				}
+			}
+			else
+			{
+				if( SelectedUnit_ ) SelectedUnit_->removeNotifier( this );
+				SelectedUnit_ = nullptr;
+			}
+
+		}
 	}
 	MouseEvents_.clear();
 }
@@ -214,7 +209,9 @@ void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 	BcAssert( UIMaterial_ );
 	UIMaterialComponent_ = Parent->attach< ScnMaterialComponent >( BcName::INVALID, UIMaterial_, ShaderPermutation );
 
-	View_ = getComponentAnyParentByType< ScnViewComponent >();
+	View_ = ScnCore::pImpl()->findEntity( "CameraEntity" )->getComponentAnyParentByType< ScnViewComponent >();
+	BcAssert( View_ );
+
 	World_ = getComponentAnyParentByType< ScnPhysicsWorldComponent >();
 	Canvas_ = getComponentAnyParentByType< ScnCanvasComponent >();
 
@@ -236,6 +233,7 @@ void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 				SceneEntity ) );
 		auto MotherUnit = MotherShipEntity0->getComponentByType< GaUnitComponent >();
 		MotherUnit->setTeam( 1 );
+		PlayerShip_ = MotherShipEntity0->getComponentByType< GaMothershipComponent >();
 	}
 
 	{
@@ -247,19 +245,8 @@ void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 				SceneEntity ) );
 		auto Unit = MotherShipEntity1->getComponentByType< GaUnitComponent >();
 		Unit->setTeam( 2 );
+		EnemyShip_ = MotherShipEntity1->getComponentByType< GaMothershipComponent >();
 	}
-
-	{
-		auto Emitter = getComponentAnyParentByType< ScnSoundEmitterComponent >();
-		BcAssert( Emitter );
-		ScnSoundRef Sound;
-		if( CsCore::pImpl()->requestResource( "sounds", "music", Sound ) )
-		{
-			Emitter->play( Sound );
-		}	
-	}
-
-
 
 	Super::onAttach( Parent );
 }

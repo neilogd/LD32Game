@@ -2,23 +2,25 @@
 #include "Psybrus.h"
 
 //////////////////////////////////////////////////////////////////////////
-// GaSceneComponent
-class GaSceneComponent:
+// GaIntroComponent
+class GaIntroComponent:
 	public ScnComponent
 {
 public:
-	REFLECTION_DECLARE_DERIVED( GaSceneComponent, ScnComponent );
+	REFLECTION_DECLARE_DERIVED( GaIntroComponent, ScnComponent );
 
-	GaSceneComponent();
-	virtual ~GaSceneComponent();
+	GaIntroComponent();
+	virtual ~GaIntroComponent();
 
 	void update( BcF32 Tick ) override;
 
 	void onAttach( ScnEntityWeakRef Parent ) override;
-
+	void onDetach( ScnEntityWeakRef Parent ) override;
 
 private:
 	class ScnCanvasComponent* Canvas_;
 	class ScnFontComponent* Font_;
+
+	BcF32 Timer_;
 
 };

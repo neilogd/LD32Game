@@ -5,7 +5,6 @@
 #include "GaMinerComponent.h"
 #include "GaUnitComponent.h"
 
-
 #include "System/Scene/Rendering/ScnCanvasComponent.h"
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Rendering/ScnParticleSystemComponent.h"
@@ -14,6 +13,7 @@
 #include "System/Scene/Physics/ScnPhysicsRigidBodyComponent.h"
 #include "System/Scene/Physics/ScnPhysicsEvents.h"
 
+#include "System/Os/OsCore.h"
 #include "Base/BcRandom.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -48,6 +48,8 @@ GaMothershipComponent::GaMothershipComponent():
 	MinerEntity_( nullptr ),
 	TotalResources_( 0.0f ),
 	TotalHull_( 100.0f ),
+	PulseTimer_( 0.0f ),
+	RestartTimer_( 0.0f ),
 	Canvas_( nullptr ),
 	Font_( nullptr ),
 	View_( nullptr ),
@@ -76,6 +78,7 @@ GaMothershipComponent::~GaMothershipComponent()
 // update
 void GaMothershipComponent::update( BcF32 Tick )
 {
+	PulseTimer_ -= Tick;
 	// Stabilise ship position.
 	auto RigidBodyPosition = RigidBody_->getPosition();
 	auto Displacement = TargetPosition_ - RigidBodyPosition;
@@ -107,10 +110,10 @@ void GaMothershipComponent::update( BcF32 Tick )
 	}
 
 	// AI player :)
-	if( Unit_->getTeam() == 2 )
+	if( getHull() > 0.0f && Unit_->getTeam() == 2 )
 	{
 		static int ShouldTick = 0;
-		if( ++ShouldTick > 0 )
+		if( ++ShouldTick > 10 )
 		{
 			ShouldTick = 0;
 			AttackWeight_ = std::max( AttackWeight_, 0.0f );
@@ -133,6 +136,31 @@ void GaMothershipComponent::update( BcF32 Tick )
 						break;
 					}
 				}
+			}
+
+			if( getHull() < 25.0f && TotalResources_ > 50.0f )
+			{
+				GaUnitActionEvent Event;
+				Event.SourceUnit_ = Unit_;
+				Event.TargetUnit_ = Unit_;
+				getParentEntity()->publish( 1, Event );
+				MineWeight_ += Tick;
+			}
+			else if( getHull() < 50.0f && TotalResources_ > 100.0f )
+			{
+				GaUnitActionEvent Event;
+				Event.SourceUnit_ = Unit_;
+				Event.TargetUnit_ = Unit_;
+				getParentEntity()->publish( 1, Event );
+				MineWeight_ += Tick;
+			}
+			else if( getHull() < 75.0f && TotalResources_ > 200.0f )
+			{
+				GaUnitActionEvent Event;
+				Event.SourceUnit_ = Unit_;
+				Event.TargetUnit_ = Unit_;
+				getParentEntity()->publish( 1, Event );
+				MineWeight_ += Tick;
 			}
 
 			// Control miners.
@@ -232,9 +260,176 @@ void GaMothershipComponent::update( BcF32 Tick )
 			.setAlignment( ScnFontAlignment::HCENTRE | ScnFontAlignment::VCENTRE );
 		
 		BcChar Buffer[ 1024 ];
-		BcSPrintf( Buffer, "R: $%.2f\nH: %.2f%%", TotalResources_, TotalHull_ );
+		BcSPrintf( Buffer, "R: $%.2f", TotalResources_ );
+		auto Size = Font_->drawText( Canvas_, DrawParams, Position, MaVec2d( 0.0f, 0.0f ), Buffer );
+		BcSPrintf( Buffer, "H: %.2f%%", TotalHull_ );
 
-		Font_->drawText( Canvas_, DrawParams, Position, MaVec2d( 0.0f, 0.0f ), Buffer );
+		DrawParams.setTextColour( RsColour::GREEN );
+		if( TotalHull_ < 75.0f )
+		{
+			DrawParams.setTextColour( RsColour::YELLOW );
+		}
+		if( TotalHull_ < 50.0f )
+		{
+			DrawParams.setTextColour( RsColour::ORANGE );
+		}
+		if( TotalHull_ < 25.0f )
+		{
+			DrawParams.setTextColour( RsColour::RED );
+		}
+		Size = Font_->drawText( Canvas_, DrawParams, Position + MaVec2d( 0.0f, Size.y() ), MaVec2d( 0.0f, 0.0f ), Buffer );
+	}
+
+	// Win/lose.
+	if( Unit_->getTeam() == 1 )
+	{
+		BcBool WinLoseState = BcFalse;
+		std::string Text;
+		if( Enemy_->getHull() <= 0 )
+		{
+			Text = "You Win!";
+			WinLoseState = BcTrue;
+		}
+		if( getHull() <= 0 )
+		{
+			Text = "You Lose!";
+			WinLoseState = BcTrue;
+		}
+		if( WinLoseState )
+		{
+			ScnFontDrawParams DrawParams = ScnFontDrawParams()
+				.setSize( 64.0f )
+				.setMargin( 8.0f )
+				.setTextColour( RsColour::WHITE )
+				.setAlignment( ScnFontAlignment::HCENTRE | ScnFontAlignment::VCENTRE );
+
+			Font_->drawText( Canvas_, DrawParams, MaVec2d( 0.0f, 0.0f ), MaVec2d( 0.0f, 0.0f ), Text );
+
+			if( RestartTimer_ > 5.0f )
+			{
+				OsClient* Client = OsCore::pImpl()->getClient( 0 );
+				BcF32 HalfWidth = static_cast< BcF32 >( Client->getWidth() / 2 );
+				BcF32 HalfHeight = static_cast< BcF32 >( Client->getHeight() / 2 );
+				DrawParams.setSize( 50.0f );
+				DrawParams.setMargin( 32.0f );
+				DrawParams.setAlignment( ScnFontAlignment::HCENTRE | ScnFontAlignment::BOTTOM );
+				DrawParams.setTextColour( RsColour::GREEN );
+				Font_->drawText( Canvas_, DrawParams, MaVec2d( -HalfWidth, -HalfHeight ), MaVec2d( HalfWidth * 2.0f, HalfHeight * 2.0f ), "Press any key!" );
+			}
+			RestartTimer_ += Tick;
+		}
+	}
+	
+	if( TotalHull_ <= 0.0f )
+	{
+		if( PulseTimer_ < 0.0f )
+		{
+			PulseTimer_ = 0.5f;
+
+			// Debris.
+			BcF32 Damage = 5.0f;
+			ScnParticle* Particle = nullptr;
+			auto RbPos = RigidBody_->getPosition() + MaVec3d( 0.0f, 2.0f, 0.0f );
+			for( BcU32 Idx = 0; Idx < BcU32( Damage * 5.0f ); ++Idx )
+			{
+				if( ParticlesAdd_->allocParticle( Particle ) )
+				{
+					Particle->Position_ = RbPos* 2.0f;
+					Particle->Velocity_ = MaVec3d(
+						BcRandom::Global.randReal(),
+						BcRandom::Global.randReal(),
+						BcRandom::Global.randReal() ) * Damage * 4.0f;
+					Particle->Acceleration_ = MaVec3d( 0.0f, 0.0f, 0.0f );
+					Particle->Scale_ = MaVec2d( 0.0f, 0.1f );
+					Particle->MinScale_ = MaVec2d( 0.1f, 0.1f );
+					Particle->MaxScale_ = MaVec2d( 0.1f, 0.1f );
+					Particle->Rotation_ = BcRandom::Global.randReal();
+					Particle->RotationMultiplier_ = BcRandom::Global.randReal();
+					Particle->Colour_ = RsColour( 1.0f, 0.9f, 0.8f, 1.0f );
+					Particle->MinColour_ = RsColour( 1.0f, 0.9f, 0.8f, 1.0f );
+					Particle->MaxColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+					Particle->TextureIndex_ = 0;
+					Particle->CurrentTime_ = 0.0f;
+					Particle->MaxTime_ = 0.5f;
+					Particle->Alive_ = BcTrue;
+				}
+			}
+
+			// Smoke.
+			for( BcU32 Idx = 0; Idx < 10; ++Idx )
+			{
+				if( ParticlesSub_->allocParticle( Particle ) )
+				{
+					Particle->Position_ = RbPos * 2.0f;
+					Particle->Velocity_ = MaVec3d(
+						BcRandom::Global.randReal(),
+						BcRandom::Global.randReal(),
+						BcRandom::Global.randReal() ) * Damage * 1.0f;
+					Particle->Acceleration_ = -Particle->Velocity_ * 1.0f;
+					Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+					Particle->MinScale_ = MaVec2d( 1.2f, 1.2f );
+					Particle->MaxScale_ = MaVec2d( 32.5f, 32.5f );
+					Particle->Rotation_ = BcRandom::Global.randReal();
+					Particle->RotationMultiplier_ = BcRandom::Global.randReal() * 2.0f;
+					Particle->Colour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+					Particle->MinColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+					Particle->MaxColour_ = RsColour( 1.0f, 1.0f, 1.0f, 0.0f );
+					Particle->TextureIndex_ = BcRandom::Global.randRange( 4, 6 );
+					Particle->CurrentTime_ = 0.0f;
+					Particle->MaxTime_ = BcRandom::Global.randRealRange( 0.5f, 1.2f );
+					Particle->Alive_ = BcTrue;
+				}
+
+				if( ParticlesAdd_->allocParticle( Particle ) )
+				{
+					Particle->Position_ = RbPos * 2.0f;
+					Particle->Velocity_ = MaVec3d(
+						BcRandom::Global.randReal(),
+						BcRandom::Global.randReal(),
+						BcRandom::Global.randReal() ) * Damage * 1.0f;
+					Particle->Acceleration_ = -Particle->Velocity_ * 1.0f;
+					Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+					Particle->MinScale_ = MaVec2d( 1.2f, 1.2f );
+					Particle->MaxScale_ = MaVec2d( 32.5f, 32.5f );
+					Particle->Rotation_ = BcRandom::Global.randReal();
+					Particle->RotationMultiplier_ = BcRandom::Global.randReal() * 2.0f;
+					Particle->Colour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+					Particle->MinColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+					Particle->MaxColour_ = RsColour( 1.0f, 1.0f, 1.0f, 0.0f );
+					Particle->TextureIndex_ = BcRandom::Global.randRange( 4, 6 );
+					Particle->CurrentTime_ = 0.0f;
+					Particle->MaxTime_ = BcRandom::Global.randRealRange( 0.5f, 1.2f );
+					Particle->Alive_ = BcTrue;
+				}
+			}
+
+			// Flames.
+			for( BcU32 Idx = 0; Idx < 10; ++Idx )
+			{
+				if( ParticlesAdd_->allocParticle( Particle ) )
+				{
+					Particle->Position_ = RbPos * 2.0f;
+					Particle->Velocity_ = MaVec3d(
+						BcRandom::Global.randReal(),
+						BcRandom::Global.randReal(),
+						BcRandom::Global.randReal() ) * Damage * 1.0f;
+					Particle->Acceleration_ = -Particle->Velocity_ * 0.2f;
+					Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+					Particle->MinScale_ = MaVec2d( 1.2f, 1.2f );
+					Particle->MaxScale_ = MaVec2d( 16.5f, 16.5f );
+					Particle->Rotation_ = BcRandom::Global.randReal();
+					Particle->RotationMultiplier_ = BcRandom::Global.randReal();
+					Particle->Colour_ = RsColour( 1.0f, 0.0f, 0.0f, 1.0f );
+					Particle->MinColour_ = RsColour( 1.0f, 0.0f, 0.0f, 1.0f );
+					Particle->MaxColour_ = RsColour( 1.0f, 1.0f, 0.0f, 0.0f );
+					Particle->TextureIndex_ = BcRandom::Global.randRange( 4, 6 );
+					Particle->CurrentTime_ = 0.0f;
+					Particle->MaxTime_ = BcRandom::Global.randRealRange( 0.3f, 0.5f );
+					Particle->Alive_ = BcTrue;
+				}
+			}			
+		}
+
 	}
 }
 
@@ -244,6 +439,23 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 {
 	Unit_ = getComponentByType< GaUnitComponent >();
 	RigidBody_ = getComponentByType< ScnPhysicsRigidBodyComponent >();
+
+	// Restart.
+	OsCore::pImpl()->subscribe( osEVT_INPUT_KEYDOWN, this, 
+		[ this ]( EvtID ID, const EvtBaseEvent& BaseEvent )
+		{	
+			if( RestartTimer_ > 5.0f )
+			{
+				ScnCore::pImpl()->spawnEntity( 
+					ScnEntitySpawnParams( 
+						"SceneEntity", "default", "IntroEntity", MaMat4d(), 
+						getParentEntity()->getParentEntity()->getParentEntity() ) );
+				ScnCore::pImpl()->removeEntity( getParentEntity()->getParentEntity() );
+				return evtRET_REMOVE;
+			}
+			
+			return evtRET_PASS;
+		} );
 
 	// Build
 	Parent->subscribe( 0, this,
@@ -480,7 +692,7 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 	BcAssert( Canvas_ );
 	Font_ = getComponentAnyParentByType< ScnFontComponent >();
 	BcAssert( Font_ );
-	View_ = ScnCore::pImpl()->findEntity( "GameEntity" )->getComponentAnyParentByType< ScnViewComponent >();
+	View_ = ScnCore::pImpl()->findEntity( "CameraEntity" )->getComponentAnyParentByType< ScnViewComponent >();
 	BcAssert( View_ );
 
 	ParticlesAdd_ = getComponentAnyParentByType< ScnParticleSystemComponent >( 0 );
@@ -489,6 +701,14 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 	BcAssert( ParticlesSub_ );
 
 	Super::onAttach( Parent );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// onDetach
+void GaMothershipComponent::onDetach( ScnEntityWeakRef Parent )
+{
+	OsCore::pImpl()->unsubscribeAll( this );
+	return Super::onDetach( Parent );
 }
 
 //////////////////////////////////////////////////////////////////////////

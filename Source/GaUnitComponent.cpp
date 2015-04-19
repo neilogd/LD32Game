@@ -97,6 +97,7 @@ void GaUnitComponent::update( BcF32 Tick )
 	ScnDebugRenderComponent::pImpl()->drawLine( Position, GroundPosition, TeamColour, 0 );
 	ScnDebugRenderComponent::pImpl()->drawCircle( GroundPosition, MaVec3d( 0.5f, 0.5f, 0.5f ), TeamColour, 0 );
 
+	setupShadow();
 	if( ShadowParticle_ )
 	{
 		ShadowParticle_->Position_ = getParentEntity()->getWorldPosition() * 2.0f - MaVec3d( 0.0f, ShadowSize_ / 16.0f, 0.0f );
@@ -129,29 +130,32 @@ void GaUnitComponent::onAttach( ScnEntityWeakRef Parent )
 // setupShadow
 void GaUnitComponent::setupShadow()
 {
-	auto Unit = getComponentByType< GaUnitComponent >();
-	BcAssert( Unit );
-	BcAssert( ParticlesAdd_ );
-	if( ParticlesAdd_->allocParticle( ShadowParticle_ ) )
+	if( ShadowParticle_ == nullptr )
 	{
-		RsColour TeamColour = Unit->getTeamColour();
-		TeamColour.a( 0.75f );
+		auto Unit = getComponentByType< GaUnitComponent >();
+		BcAssert( Unit );
+		BcAssert( ParticlesAdd_ );
+		if( ParticlesAdd_->allocParticle( ShadowParticle_ ) )
+		{
+			RsColour TeamColour = Unit->getTeamColour();
+			TeamColour.a( 0.75f );
 
-		ShadowParticle_->Position_ = getParentEntity()->getWorldPosition() * 2.0f - MaVec3d( 0.0f, ShadowSize_ / 16.0f, 0.0f );
-		ShadowParticle_->Velocity_ = MaVec3d( 0.0f, 0.0f, 0.0f );
-		ShadowParticle_->Acceleration_ = MaVec3d( 0.0f, 0.0f, 0.0f );
-		ShadowParticle_->Scale_ = MaVec2d( ShadowSize_, ShadowSize_ );
-		ShadowParticle_->MinScale_ = MaVec2d( ShadowSize_, ShadowSize_ );
-		ShadowParticle_->MaxScale_ = MaVec2d( ShadowSize_, ShadowSize_ );
-		ShadowParticle_->Rotation_ = 0.0f;
-		ShadowParticle_->RotationMultiplier_ = 0.0f;
-		ShadowParticle_->Colour_ = TeamColour;
-		ShadowParticle_->MinColour_ = TeamColour;
-		ShadowParticle_->MaxColour_ = RsColour::BLACK;
-		ShadowParticle_->TextureIndex_ = 2;
-		ShadowParticle_->CurrentTime_ = 0.0f;
-		ShadowParticle_->MaxTime_ = 0.5f;
-		ShadowParticle_->Alive_ = BcTrue;
+			ShadowParticle_->Position_ = getParentEntity()->getWorldPosition() * 2.0f - MaVec3d( 0.0f, ShadowSize_ / 16.0f, 0.0f );
+			ShadowParticle_->Velocity_ = MaVec3d( 0.0f, 0.0f, 0.0f );
+			ShadowParticle_->Acceleration_ = MaVec3d( 0.0f, 0.0f, 0.0f );
+			ShadowParticle_->Scale_ = MaVec2d( ShadowSize_, ShadowSize_ );
+			ShadowParticle_->MinScale_ = MaVec2d( ShadowSize_, ShadowSize_ );
+			ShadowParticle_->MaxScale_ = MaVec2d( ShadowSize_, ShadowSize_ );
+			ShadowParticle_->Rotation_ = 0.0f;
+			ShadowParticle_->RotationMultiplier_ = 0.0f;
+			ShadowParticle_->Colour_ = TeamColour;
+			ShadowParticle_->MinColour_ = TeamColour;
+			ShadowParticle_->MaxColour_ = RsColour::BLACK;
+			ShadowParticle_->TextureIndex_ = 2;
+			ShadowParticle_->CurrentTime_ = 0.0f;
+			ShadowParticle_->MaxTime_ = 0.5f;
+			ShadowParticle_->Alive_ = BcTrue;
+		}
 	}
 }
 

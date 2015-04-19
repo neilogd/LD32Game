@@ -17,12 +17,15 @@ public:
 	void update( BcF32 Tick ) override;
 
 	void onAttach( ScnEntityWeakRef Parent ) override;
+	void onDetach( ScnEntityWeakRef Parent ) override;
 
 	void onObjectDeleted( class ReObject* Object ) override;
 
 	void addResources( BcF32 Resources );
 	BcBool subResources( BcF32 Resources );
 	BcF32 getResources() const { return TotalResources_; }
+
+	BcF32 getHull() const { return TotalHull_; }
 
 	class GaAsteroidComponent* findNearestAsteroid( const MaVec3d& Position );
 	class GaAsteroidComponent* findAsteroid( std::function< BcF32( class GaAsteroidComponent* ) > HeuristicFunc );
@@ -31,6 +34,8 @@ private:
 	class ScnEntity* MinerEntity_;
 	BcF32 TotalResources_;
 	BcF32 TotalHull_;
+	BcF32 PulseTimer_;
+	BcF32 RestartTimer_;
 
 	MaVec3d TargetPosition_;	
 	MaQuat TargetRotation_;

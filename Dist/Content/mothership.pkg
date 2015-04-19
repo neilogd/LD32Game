@@ -20,12 +20,6 @@
 				},
 
 				{
-					"type" : "ScnFontComponent",
-					"material" : "$(ScnMaterial:fonts.font_material)",
-					"font" : "$(ScnFont:fonts.courier)"
-				},
-
-				{
 					"type" : "GaMothershipComponent",
 					"minerentity" : "$(ScnEntity:miner.MinerEntity_0)",
 					"totalresources" : 100.0

@@ -4,7 +4,7 @@
 		/////////////////////////////////////////////////////////////// 
 		// Entities.
 		{
-			"name" : "SceneEntity",
+			"name" : "RootEntity",
 			"type" : "ScnEntity",
 
 			"components" : [
@@ -13,7 +13,30 @@
 				},
 
 				{
+					"type" : "GaFlowComponent"
+				},
+
+				{
 					"type" : "ScnSoundEmitterComponent"
+				},
+
+				{
+					"type" : "ScnDebugRenderComponent",
+					"noofvertices" : 65536,
+					"material" : "$(ScnMaterial:materials.debugrender)"
+				},
+
+				{
+					"type"					: "ScnCanvasComponent",
+					"noofvertices" 			: 8192,
+					"rendermask"			: 1,
+					"clear"					: false
+				},
+
+				{
+					"type" : "ScnFontComponent",
+					"material" : "$(ScnMaterial:fonts.font_material)",
+					"font" : "$(ScnFont:fonts.courier)"
 				},
 
 				{
@@ -44,30 +67,11 @@
 				},
 
 				{
-					"type" : "ScnDebugRenderComponent",
-					"noofvertices" : 65536,
-					"material" : "$(ScnMaterial:materials.debugrender)"
-				},
-
-				{
-					"type"					: "ScnCanvasComponent",
-					"noofvertices" 			: 8192,
-					"rendermask"			: 1,
-					"clear"					: false
-				},
-
-				{
-					"name" : "GameEntity",
+					"name" : "CameraEntity",
 					"type" : "ScnEntity",
 
 					"components" : [
-						{
-							"type" : "GaGameComponent",
-							"mothershipentity" : "$(ScnEntity:mothership.MothershipEntity_0)",
-							"uimaterial" : "$(ScnMaterial:materials.ui)"
-						},
-
-						{
+						{				
 							"type" : "GaCameraComponent",
 
 							"camerarotation" : "1.5, 0.0, 0.0",
@@ -90,6 +94,26 @@
 							"horizontalfov" : 0.75,
 							"verticalfov" : 0.0,
 							"rendermask" : 1
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"name" : "SceneEntity",
+			"type" : "ScnEntity",
+
+			"components" : [
+				{
+					"name" : "GameEntity",
+					"type" : "ScnEntity",
+
+					"components" : [
+						{
+							"type" : "GaGameComponent",
+							"mothershipentity" : "$(ScnEntity:mothership.MothershipEntity_0)",
+							"uimaterial" : "$(ScnMaterial:materials.ui)"
 						}
 					]
 				},
@@ -118,7 +142,45 @@
 							"maxextents" : 64.0,
 							"depth" : 1.0,
 							"margin" : 4.0
+						}
+					]
+				}
+			]
+		},
 
+		{
+			"name" : "IntroEntity",
+			"type" : "ScnEntity",
+
+			"components" : [
+
+				{
+					"type" : "GaIntroComponent"
+				},
+
+				{
+					"name" : "AsteroidField",
+					"type" : "ScnEntity",
+
+					"components" : [
+						{
+							"type" : "GaAsteroidFieldComponent",
+
+							"asteroidtemplates" : [
+								"$(ScnEntity:asteroids.AsteroidEntity_0)"
+							],
+
+							"noofasteroids" : 32,
+
+							"minvelocity" : 1.0,
+							"maxvelocity" : 2.5,
+							"minsize" : 1.0,
+							"maxsize" : 1.5,
+
+							"width" : 16.0,
+							"maxextents" : 64.0,
+							"depth" : 1.0,
+							"margin" : 4.0
 						}
 					]
 				}
