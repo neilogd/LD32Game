@@ -27,8 +27,8 @@ extern BcU32 GResolutionHeight;
 // PsyGameInit
 void PsyGameInit()
 {
-	GResolutionWidth = 900;
-	GResolutionHeight = 600;
+	//GResolutionWidth = 900;
+	//GResolutionHeight = 600;
 }
 
 //////////////////////////////////////////////////////////////////////////

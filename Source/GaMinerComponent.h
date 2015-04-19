@@ -1,5 +1,6 @@
 #pragma once
 #include "Psybrus.h"
+#include "Math/MaQuat.h"
 
 //////////////////////////////////////////////////////////////////////////
 // GaMinerComponent
@@ -38,6 +39,8 @@ private:
 	BcF32 MaxExtents_;
 	BcF32 MiningSizeThreshold_;
 
+	MaQuat TargetRotation_;
+
 	enum class State
 	{
 		IDLE,
@@ -53,4 +56,8 @@ private:
 	class GaUnitComponent* Target_;
 
 	BcF32 AmountMined_;
+
+	class ScnParticleSystemComponent* ParticlesAdd_;
+	class ScnParticleSystemComponent* ParticlesSub_;
+	struct ScnParticle* ShadowParticle_;;
 };

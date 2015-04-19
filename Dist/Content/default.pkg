@@ -18,7 +18,19 @@
 					"gravity" : "0.0, 0.0, 0.0",
 					"maxsubsteps" : 1,
 					"framerate" : 60.0,
-					"debugdrawworld" : true
+					"debugdrawworld" : false
+				},
+
+				{
+					"type" : "ScnParticleSystemComponent",
+					"noofparticles" : 5000,
+					"material" : "$(ScnMaterial:materials.particles_add)"
+				},
+
+				{
+					"type" : "ScnParticleSystemComponent",
+					"noofparticles" : 5000,
+					"material" : "$(ScnMaterial:materials.particles_sub)"
 				},
 
 				{

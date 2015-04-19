@@ -22,6 +22,18 @@
 				"Content/Source/IconRepair.png",
 				"Content/Source/IconResources.png"
 			]
+		},
+
+		{
+			"type"			: "ScnTextureAtlas",
+			"name"			: "particles",
+
+			"source"		: [
+				"Content/Source/Particle0.png",
+				"Content/Source/Particle1.png",
+				"Content/Source/Particle2.png",
+				"Content/Source/Particle3.png"
+			]
 		}
 	]
 }

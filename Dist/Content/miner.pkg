@@ -30,8 +30,15 @@
 				},
 
 				{
+					"type"					: "ScnModelComponent",
+					"model"					: "$(ScnModel:this.miner_model)",
+					"scale"					: "1.0, 1.0, 1.0"
+				},
+
+				{
 					"type" : "GaUnitComponent",
 					"team" : 1,
+					"shadowsize" : 10.0,
 
 					"actions" : [
 						{
@@ -72,6 +79,70 @@
 					]
 				}
 			]
+		},
+
+		{
+			"type"		: "ScnModel",
+			"name"		: "miner_model",
+			"source"	: "Content/Source/Miner.fbx",
+			"materials" : {
+				"(.*)" : 			"$(ScnMaterial:this.miner_material)"
+			}
+		},
+
+		{
+			"type" : "ScnMaterial",
+			"name" : "miner_material",
+
+			// Shader
+			"shader" : "$(ScnShader:shaders.textured)",
+
+			// Textures
+			"textures" : {
+				"aDiffuseTex" : "$(ScnTexture:this.miner_texture_ao)"
+			},
+
+			// Samplers
+			"samplers" : {
+				"aDiffuseTex" : {
+					"addressu" : "wrap",
+					"addressv" : "wrap",
+					"minfilter" : "linear_mipmap_linear",
+					"magfilter" : "linear"
+				}
+			},
+
+			// New render state.
+			"renderstate" : {
+				"blendstate" : {
+					"rendertarget" : [
+						{
+							"enable" : false
+						}
+					]
+				},
+
+				"depthstencilstate" : {
+					"depthtestenable" : true,
+					"depthwriteenable" : true,
+					"depthfunc" : "lessequal",
+					"stencilenable" : false
+				},
+
+				"rasteriserstate" : {
+					"fillmode" : "solid",
+					"cullmode" : "none",
+					"depthclipenable" : true,
+					"antialiasedlineenable" : true
+				}
+			}
+		},
+
+		{
+			"type"			: "ScnTexture",
+			"name"			: "miner_texture_ao",
+
+			"source"		: "Content/Source/MinerAO.png"
 		}
 	]
 }

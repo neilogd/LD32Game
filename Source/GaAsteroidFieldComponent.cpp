@@ -1,5 +1,6 @@
 #include "GaAsteroidFieldComponent.h"
 #include "GaAsteroidComponent.h"
+#include "GaUnitComponent.h"
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Physics/ScnPhysicsWorldComponent.h"
@@ -165,13 +166,7 @@ void GaAsteroidFieldComponent::onAttach( ScnEntityWeakRef Parent )
 		BcAssert( Entity != nullptr );
 		Asteroids_.push_back( Entity );
 
-		// Register for an event to setup at the end of the update tick.
-		ScnCore::pImpl()->subscribe( sysEVT_SYSTEM_POST_UPDATE, this,
-			[ this, Entity ]( EvtID, const EvtBaseEvent& )->eEvtReturn
-			{
-				recycle( Entity->getComponentByType< GaAsteroidComponent >(), BcFalse );
-				return evtRET_REMOVE;
-			} );
+		recycle( Entity->getComponentByType< GaAsteroidComponent >(), BcFalse );
 	}
 
 	Super::onAttach( Parent );
@@ -188,27 +183,37 @@ void GaAsteroidFieldComponent::onDetach( ScnEntityWeakRef Parent )
 // recycle
 void GaAsteroidFieldComponent::recycle( GaAsteroidComponent* Asteroid, BcBool SetPosition )
 {
-	auto RigidBody = Asteroid->getComponentByType< ScnPhysicsRigidBodyComponent >();
-	auto Position = RigidBody->getPosition();
-	auto Size = BcRandom::Global.randRealRange( MinSize_, MaxSize_ );
-	Asteroid->setSize( Size );
+	// Register for an event to setup at the end of the update tick.
+	ScnCore::pImpl()->subscribe( sysEVT_SYSTEM_POST_UPDATE, this,
+		[ this, Asteroid, SetPosition ]( EvtID, const EvtBaseEvent& )->eEvtReturn
+		{
+			auto Unit = Asteroid->getComponentByType< GaUnitComponent >();
+			Unit->setupShadow();
+			auto RigidBody = Asteroid->getComponentByType< ScnPhysicsRigidBodyComponent >();
+			auto Position = RigidBody->getPosition();
+			auto Size = BcRandom::Global.randRealRange( MinSize_, MaxSize_ );
+			Asteroid->setSize( Size );
 
-	if( SetPosition )
-	{
-		MaVec3d NewPosition = MaVec3d(
-			BcRandom::Global.randRealRange( -Width_, Width_ ),
-			0.0f,
-			-MaxExtents_ + 0.05f );
-		RigidBody->translate( -Position + NewPosition );
-	}
+			if( SetPosition )
+			{
+				MaVec3d NewPosition = MaVec3d(
+					BcRandom::Global.randRealRange( -Width_, Width_ ),
+					0.0f,
+					-MaxExtents_ + 0.05f );
+				RigidBody->translate( -Position + NewPosition );
+				Asteroid->getParentEntity()->setLocalPosition( RigidBody->getPosition() );
+			}
 
-	const BcF32 AngularRange = 1.0f;
-	RigidBody->setAngularVelocity( MaVec3d( 
-		BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
-		BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
-		BcRandom::Global.randRealRange( -AngularRange, AngularRange ) ) );
+			const BcF32 AngularRange = 1.0f;
+			RigidBody->setAngularVelocity( MaVec3d( 
+				BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
+				BcRandom::Global.randRealRange( -AngularRange, AngularRange ),
+				BcRandom::Global.randRealRange( -AngularRange, AngularRange ) ) );
 
+			auto Velocity = BcRandom::Global.randRealRange( MinVelocity_, MaxVelocity_ );
+			RigidBody->setLinearVelocity( MaVec3d( 0.0f, 0.0f, Velocity ) );
 
-	auto Velocity = BcRandom::Global.randRealRange( MinVelocity_, MaxVelocity_ );
-	RigidBody->setLinearVelocity( MaVec3d( 0.0f, 0.0f, Velocity ) );
+			return evtRET_REMOVE;
+		} );
+
 }

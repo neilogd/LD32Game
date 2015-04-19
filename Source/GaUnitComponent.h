@@ -45,7 +45,11 @@ public:
 	virtual ~GaUnitComponent();
 
 	void update( BcF32 Tick ) override;
+	void onAttach( ScnEntityWeakRef Parent ) override;
 
+	void setupShadow();
+
+	RsColour getTeamColour() const;
 	void setTeam( BcU32 Team ) { Team_ = Team; }
 	BcU32 getTeam() const { return Team_; }
 	const std::vector< GaUnitAction >& getActions() const { return Actions_; }
@@ -53,4 +57,10 @@ public:
 private:
 	BcU32 Team_;
 	std::vector< GaUnitAction > Actions_;
+
+	BcF32 ShadowSize_;
+
+	class ScnParticleSystemComponent* ParticlesAdd_;
+	class ScnParticleSystemComponent* ParticlesSub_;
+	struct ScnParticle* ShadowParticle_;;
 };

@@ -2,6 +2,7 @@
 #include "GaAsteroidFieldComponent.h"
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
+#include "System/Scene/Rendering/ScnModel.h"
 #include "System/Scene/Physics/ScnPhysicsRigidBodyComponent.h"
 #include "System/Scene/Physics/ScnPhysicsCollisionComponent.h"
 #include "System/Scene/Physics/ScnPhysicsEvents.h"
@@ -56,6 +57,12 @@ void GaAsteroidComponent::update( BcF32 Tick )
 			BcAssert( RigidBody );
 			Collision->setLocalScaling( MaVec3d( Size_, Size_, Size_ ) );
 			RigidBody->setMass( Size_ * MassSizeRatio_ );
+
+			auto Model = getComponentByType< ScnModelComponent >();
+			if( Model )
+			{
+				Model->setBaseTransform( MaVec3d( 0.0f, 0.0f, 0.0f ), MaVec3d( Size_, Size_, Size_ ), MaVec3d( 0.0f, 0.0f, 0.0f ) );
+			}
 
 			OldSize_ = Size_;
 		}

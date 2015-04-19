@@ -34,12 +34,13 @@
 				{
 					"type"					: "ScnModelComponent",
 					"model"					: "$(ScnModel:this.mothership_model)",
-					"scale"					: "2.0, 2.0, 2.0"
+					"scale"					: "1.6, 1.6, 1.6"
 				},
 
 				{
 					"type" : "GaUnitComponent",
 					"team" : 1,
+					"shadowsize" : 48.0,
 
 					"actions" : [
 						{

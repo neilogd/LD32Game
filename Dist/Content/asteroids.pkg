@@ -28,10 +28,84 @@
 				},
 
 				{
+					"type"					: "ScnModelComponent",
+					"model"					: "$(ScnModel:this.asteroid0_model)",
+					"scale"					: "1.0, 1.0, 1.0"
+				},
+
+				{
 					"type" : "GaUnitComponent",
-					"team" : 0
+					"team" : 0,
+					"shadowsize" : 10.0
+
 				}
 			]
+		},
+
+
+		{
+			"type"		: "ScnModel",
+			"name"		: "asteroid0_model",
+			"source"	: "Content/Source/Asteroid0.fbx",
+			"materials" : {
+				"(.*)" : 			"$(ScnMaterial:this.asteroid0_material)"
+			}
+		},
+
+		{
+			"type" : "ScnMaterial",
+			"name" : "asteroid0_material",
+
+			// Shader
+			"shader" : "$(ScnShader:shaders.textured)",
+
+			// Textures
+			"textures" : {
+				"aDiffuseTex" : "$(ScnTexture:this.asteroid0_texture_ao)"
+			},
+
+			// Samplers
+			"samplers" : {
+				"aDiffuseTex" : {
+					"addressu" : "wrap",
+					"addressv" : "wrap",
+					"minfilter" : "linear_mipmap_linear",
+					"magfilter" : "linear"
+				}
+			},
+
+			// New render state.
+			"renderstate" : {
+				"blendstate" : {
+					"rendertarget" : [
+						{
+							"enable" : false
+						}
+					]
+				},
+
+				"depthstencilstate" : {
+					"depthtestenable" : true,
+					"depthwriteenable" : true,
+					"depthfunc" : "lessequal",
+					"stencilenable" : false
+				},
+
+				"rasteriserstate" : {
+					"fillmode" : "solid",
+					"cullmode" : "none",
+					"depthclipenable" : true,
+					"antialiasedlineenable" : true
+				}
+			}
+		},
+
+		{
+			"type"			: "ScnTexture",
+			"name"			: "asteroid0_texture_ao",
+
+			"source"		: "Content/Source/Asteroid0AO.png"
 		}
+
 	]
 }

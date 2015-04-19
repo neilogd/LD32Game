@@ -4,6 +4,7 @@
 #include "GaMothershipComponent.h"
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
+#include "System/Scene/Rendering/ScnParticleSystemComponent.h"
 #include "System/Scene/Physics/ScnPhysicsRigidBodyComponent.h"
 #include "System/Scene/Physics/ScnPhysicsEvents.h"
 
@@ -26,6 +27,7 @@ void GaMinerComponent::StaticRegisterClass()
 		new ReField( "MaxExtents_", &GaMinerComponent::MaxExtents_, bcRFF_IMPORTER ),		
 		new ReField( "MiningSizeThreshold_", &GaMinerComponent::MiningSizeThreshold_, bcRFF_IMPORTER ),
 
+		new ReField( "TargetRotation_", &GaMinerComponent::TargetRotation_, bcRFF_TRANSIENT ),
 		new ReField( "State_", &GaMinerComponent::State_, bcRFF_TRANSIENT ),
 		new ReField( "CirclingTimer_", &GaMinerComponent::CirclingTimer_, bcRFF_TRANSIENT ),
 		new ReField( "TargetPosition_", &GaMinerComponent::TargetPosition_, bcRFF_TRANSIENT ),
@@ -68,6 +70,8 @@ GaMinerComponent::~GaMinerComponent()
 // update
 void GaMinerComponent::update( BcF32 Tick )
 {
+	auto Unit = getComponentByType< GaUnitComponent >();
+	BcAssert( Unit );
 	auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
 	auto Position = RigidBody->getPosition();
 
@@ -102,6 +106,19 @@ void GaMinerComponent::update( BcF32 Tick )
 			0 );
 	}
 
+	
+	{	
+		// Stabilise ship rotation.
+		auto RigidBodyRotation = RigidBody->getRotation();
+		RigidBodyRotation.inverse();
+		MaQuat RotationDisplacement = TargetRotation_ * RigidBodyRotation;
+		auto EularRotationDisplacement = RotationDisplacement.asEuler();
+		RigidBody->applyTorque( EularRotationDisplacement * RigidBody->getMass() * 100.0f );
+
+		// Dampen.
+		RigidBody->setAngularVelocity( RigidBody->getAngularVelocity() * 0.3f );
+	}
+
 	switch( State_ )
 	{
 	case State::IDLE:
@@ -133,7 +150,7 @@ void GaMinerComponent::update( BcF32 Tick )
 	}
 
 	// Out of bounds.
-	BcF32 ZMax = MaxExtents_;
+	BcF32 ZMax = MaxExtents_ - 2.0f;
 	if( TargetPosition_.z() < -ZMax || TargetPosition_.z() > ZMax )
 	{
 		// TODO: notify.
@@ -175,8 +192,45 @@ void GaMinerComponent::update( BcF32 Tick )
 	{
 		auto ForceAmount = Displacement.normal() * MaxForce_ * RigidBody->getMass();
 		RigidBody->applyCentralForce( ForceAmount );
+		
+		MaMat4d LookAt;
+		LookAt.lookAt( MaVec3d( 0.0f, 0.0f, 0.0f ), ForceAmount + MaVec3d( 0.0f, 0.0f, 0.00000001f ), MaVec3d( 0.0f, 1.0f, 0.0f ) );
+		LookAt.inverse();
+		TargetRotation_.fromMatrix4d( LookAt );
 
-		// TODO: Draw thruster in opposite direction.
+		// Thruster.
+		ScnParticle* Particle = nullptr;
+		if( ParticlesAdd_->allocParticle( Particle ) )
+		{
+			MaMat4d WorldMat = getParentEntity()->getWorldMatrix();
+			MaVec4d Backwards = MaVec4d( 0.0f, 0.0f, 1.0f, 0.0f ) * WorldMat;
+
+			RsColour TeamColour = Unit->getTeamColour();
+			TeamColour.a( 0.75f );
+			Particle->Position_ = ( getParentEntity()->getWorldPosition() - Backwards.xyz() ) * 2.0f;
+			Particle->Velocity_ = -ForceAmount.normal() * 0.01f;
+			Particle->Acceleration_ = MaVec3d( 0.0f, 0.0f, 0.0f );
+			Particle->Scale_ = MaVec2d( 1.0f, 1.0f );
+			Particle->MinScale_ = MaVec2d( 1.0f, 1.0f );
+			Particle->MaxScale_ = MaVec2d( 0.0f, 0.0f );
+			Particle->Rotation_ = 0.0f;
+			Particle->RotationMultiplier_ = 0.0f;
+			Particle->Colour_ = TeamColour;
+			Particle->MinColour_ = TeamColour;
+			Particle->MaxColour_ = RsColour::BLACK;
+			Particle->TextureIndex_ = 3;
+			Particle->CurrentTime_ = 0.0f;
+			Particle->MaxTime_ = 0.5f;
+			Particle->Alive_ = BcTrue;
+		}
+	}
+	else
+	{
+		// Velocity direction.
+		MaMat4d LookAt;
+		LookAt.lookAt( MaVec3d( 0.0f, 0.0f, 0.0f ), RigidBody->getLinearVelocity() + MaVec3d( 0.0f, 0.0f, 0.00000001f ), MaVec3d( 0.0f, 1.0f, 0.0f ) );
+		LookAt.inverse();
+		TargetRotation_.fromMatrix4d( LookAt );
 	}
 
 	if( Target_ != nullptr )
@@ -251,7 +305,7 @@ void GaMinerComponent::update( BcF32 Tick )
 	}
 	else
 	{
-		Damping += 0.25f;
+		RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * 0.1f );
 	}
 
 	Damping = 1.0f - BcClamp( Damping, 0.0f, 1.0f ) * 0.05f;
@@ -355,8 +409,16 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 		} );
 
 
-	TargetPosition_ = Parent->getLocalPosition();
+	// Cache transforms.
+	auto WorldMatrix = Parent->getWorldMatrix();
+	TargetPosition_ = WorldMatrix.translation();
+	TargetRotation_.fromMatrix4d( WorldMatrix );
 
+
+	ParticlesAdd_ = getComponentAnyParentByType< ScnParticleSystemComponent >( 0 );
+	BcAssert( ParticlesAdd_ );
+	ParticlesSub_ = getComponentAnyParentByType< ScnParticleSystemComponent >( 1 );
+	BcAssert( ParticlesSub_ );
 	Super::onAttach( Parent );
 }
 
