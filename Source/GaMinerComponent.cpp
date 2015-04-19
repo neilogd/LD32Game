@@ -132,6 +132,41 @@ void GaMinerComponent::update( BcF32 Tick )
 		break;
 	}
 
+	// Out of bounds.
+	BcF32 ZMax = MaxExtents_;
+	if( TargetPosition_.z() < -ZMax || TargetPosition_.z() > ZMax )
+	{
+		// TODO: notify.
+		Target_ = nullptr;
+		State_ = State::IDLE;
+
+		if( TargetPosition_.z() < -ZMax )
+		{
+			TargetPosition_ = MaVec3d( TargetPosition_.x(), TargetPosition_.y(), TargetPosition_.z() + 8.0f );
+		}
+		else
+		{
+			TargetPosition_ = MaVec3d( TargetPosition_.x(), TargetPosition_.y(), TargetPosition_.z() - 8.0f );
+		}
+	}
+
+	BcF32 XMax = MaxExtents_ * 1.5f;
+	if( TargetPosition_.x() < -XMax || TargetPosition_.x() > XMax )
+	{
+		// TODO: notify.
+		Target_ = nullptr;
+		State_ = State::IDLE;
+
+		if( TargetPosition_.x() < -XMax )
+		{
+			TargetPosition_ = MaVec3d( TargetPosition_.x() + 8.0f, TargetPosition_.y(), TargetPosition_.z() );
+		}
+		else
+		{
+			TargetPosition_ = MaVec3d( TargetPosition_.x() - 8.0f, TargetPosition_.y(), TargetPosition_.z() );
+		}
+	}
+
 	// Movement handling.
 	BcF32 Damping = 0.0f;
 	auto Displacement = TargetPosition_ - Position;
@@ -205,41 +240,6 @@ void GaMinerComponent::update( BcF32 Tick )
 					Target_ = nullptr;
 					State_ = State::IDLE;
 				}
-			}
-		}
-
-		// Out of bounds.
-		BcF32 ZMax = MaxExtents_;
-		if( TargetPosition_.z() < -ZMax || TargetPosition_.z() > ZMax )
-		{
-			// TODO: notify.
-			Target_ = nullptr;
-			State_ = State::IDLE;
-
-			if( Position.z() < -ZMax )
-			{
-				TargetPosition_ = MaVec3d( Position.x(), Position.y(), Position.z() + 8.0f );
-			}
-			else
-			{
-				TargetPosition_ = MaVec3d( Position.x(), Position.y(), Position.z() - 8.0f );
-			}
-		}
-
-		BcF32 XMax = MaxExtents_ * 1.5f;
-		if( TargetPosition_.x() < -XMax || TargetPosition_.x() > XMax )
-		{
-			// TODO: notify.
-			Target_ = nullptr;
-			State_ = State::IDLE;
-
-			if( Position.x() < -XMax )
-			{
-				TargetPosition_ = MaVec3d( Position.x() + 8.0f, Position.y(), Position.z() );
-			}
-			else
-			{
-				TargetPosition_ = MaVec3d( Position.x() - 8.0f, Position.y(), Position.z() );
 			}
 		}
 
