@@ -13,6 +13,10 @@
 				},
 
 				{
+					"type" : "ScnSoundEmitterComponent"
+				},
+
+				{
 					"type" : "ScnPhysicsWorldComponent",
 
 					"gravity" : "0.0, 0.0, 0.0",

@@ -1,12 +1,14 @@
 #include "GaGameComponent.h"
 #include "GaUnitComponent.h"
 
+#include "System/Content/CsCore.h"
 #include "System/Content/CsPackage.h"
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Rendering/ScnViewComponent.h"
 #include "System/Scene/Rendering/ScnCanvasComponent.h"
 #include "System/Scene/Rendering/ScnMaterial.h"
+#include "System/Scene/Sound/ScnSoundEmitter.h"
 #include "System/Scene/Physics/ScnPhysicsWorldComponent.h"
 #include "System/Scene/Physics/ScnPhysicsCollisionComponent.h"
 
@@ -246,6 +248,17 @@ void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 		auto Unit = MotherShipEntity1->getComponentByType< GaUnitComponent >();
 		Unit->setTeam( 2 );
 	}
+
+	{
+		auto Emitter = getComponentAnyParentByType< ScnSoundEmitterComponent >();
+		BcAssert( Emitter );
+		ScnSoundRef Sound;
+		if( CsCore::pImpl()->requestResource( "sounds", "music", Sound ) )
+		{
+			Emitter->play( Sound );
+		}	
+	}
+
 
 
 	Super::onAttach( Parent );

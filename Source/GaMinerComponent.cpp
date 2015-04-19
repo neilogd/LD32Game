@@ -183,13 +183,13 @@ void GaMinerComponent::update( BcF32 Tick )
 
 	// Out of bounds.
 	BcF32 ZMax = MaxExtents_;
-	if( TargetPosition_.z() < -ZMax || TargetPosition_.z() > ( ZMax - 2.0f ) )
+	if( TargetPosition_.z() < ( -ZMax - 2.0f ) || TargetPosition_.z() > ZMax )
 	{
 		// TODO: notify.
-		//setTarget( nullptr );
-		//State_ = State::IDLE;
+		setTarget( nullptr );
+		State_ = State::IDLE;
 
-		if( TargetPosition_.z() < -ZMax )
+		if( TargetPosition_.z() < ( -ZMax - 2.0f ) )
 		{
 			TargetPosition_ = MaVec3d( TargetPosition_.x(), TargetPosition_.y(), -ZMax + 8.0f );
 		}
@@ -203,8 +203,8 @@ void GaMinerComponent::update( BcF32 Tick )
 	if( TargetPosition_.x() < -XMax || TargetPosition_.x() > XMax )
 	{
 		// TODO: notify.
-		//setTarget( nullptr );
-		//State_ = State::IDLE;
+		setTarget( nullptr );
+		State_ = State::IDLE;
 
 		if( TargetPosition_.x() < -XMax )
 		{
@@ -583,7 +583,7 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 
 								GaCameraComponent::addShake( 0.3f );
 
-								Unit_->playSound( 0, "impact" );
+								AsteroidComponent->Unit_->playSound( 0, "impact" );
 
 								// Debris.
 								BcF32 Damage = 15.0f;

@@ -2,6 +2,15 @@
 	"resources" : [
 		{
 			"type"			: "ScnSound",
+			"name"			: "music",
+
+			"source"		: "Content/Source/Sound/music.ogg",
+			"isstream"		: true,
+			"isloop"		: true
+		},
+
+		{
+			"type"			: "ScnSound",
 			"name"			: "blip",
 
 			"source"		: "Content/Source/Sound/blip.sfs",
