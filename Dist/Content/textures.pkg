@@ -20,7 +20,8 @@
 				"Content/Source/IconReturn.png",
 				"Content/Source/IconBuild.png",
 				"Content/Source/IconRepair.png",
-				"Content/Source/IconResources.png"
+				"Content/Source/IconResources.png",
+				"Content/Source/IconBar.png"
 			]
 		},
 

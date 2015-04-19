@@ -10,7 +10,7 @@ public:
 	REFLECTION_DECLARE_DERIVED( GaSceneComponent, ScnComponent );
 
 	GaSceneComponent();
-	virtual ~GaSceneComponent();
+	virtual ~GaSceneComponent(); 
 
 	void update( BcF32 Tick ) override;
 

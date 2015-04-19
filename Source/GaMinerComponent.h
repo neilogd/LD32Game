@@ -73,6 +73,9 @@ private:
 
 	BcF32 PulseTimer_;
 
+	class ScnCanvasComponent* Canvas_;
+	class ScnViewComponent* View_;
+
 public:
 	class GaUnitComponent* Unit_;
 	class ScnPhysicsRigidBodyComponent* RigidBody_;

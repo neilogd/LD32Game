@@ -113,7 +113,7 @@ void GaMothershipComponent::update( BcF32 Tick )
 	if( getHull() > 0.0f && Unit_->getTeam() == 2 )
 	{
 		static int ShouldTick = 0;
-		if( ++ShouldTick > 10 )
+		if( ++ShouldTick > 20 )
 		{
 			ShouldTick = 0;
 			AttackWeight_ = std::max( AttackWeight_, 0.0f );

@@ -5,7 +5,9 @@
 #include "GaMothershipComponent.h"
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
+#include "System/Scene/Rendering/ScnCanvasComponent.h"
 #include "System/Scene/Rendering/ScnParticleSystemComponent.h"
+#include "System/Scene/Rendering/ScnViewComponent.h"
 #include "System/Scene/Physics/ScnPhysicsRigidBodyComponent.h"
 #include "System/Scene/Physics/ScnPhysicsEvents.h"
 
@@ -63,7 +65,9 @@ GaMinerComponent::GaMinerComponent():
 	AmountMined_( 0.0f ),
 	Unit_( nullptr ),
 	RigidBody_( nullptr ),
-	PulseTimer_( 0.0f )
+	PulseTimer_( 0.0f ),
+	View_( nullptr ),
+	Canvas_( nullptr )
 {
 
 }
@@ -500,6 +504,18 @@ void GaMinerComponent::update( BcF32 Tick )
 		CirclingTimer_ -= BcPIMUL2;
 	}
 
+	// Draw bar thing.
+	{
+		auto Position = View_->getScreenPosition( getParentEntity()->getWorldPosition() );
+		BcF32 HalfWidth = 48.0f;
+		BcF32 Width = ( AmountMined_ / MaxCapacity_ ) * 2.0f * HalfWidth;
+		Canvas_->drawSprite( Position + MaVec2d( -HalfWidth, -HalfWidth ), 
+			MaVec2d( Width, 4.0f ), 9, RsColour::YELLOW, 110 );
+		Canvas_->drawSprite( Position + MaVec2d( -HalfWidth - 1.0f, -HalfWidth - 1.0f ), 
+			MaVec2d( HalfWidth * 2.0f + 2.0f , 6.0f ), 9, RsColour( 0.2f, 0.2f, 0.0f, 0.8f ), 110 );
+	}
+
+
 	PulseTimer_ -= Tick;
 }
 
@@ -509,6 +525,10 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 {
 	Unit_ = getComponentByType< GaUnitComponent >();
 	RigidBody_ = getComponentByType< ScnPhysicsRigidBodyComponent >();
+
+	View_ = ScnCore::pImpl()->findEntity( "CameraEntity" )->getComponentAnyParentByType< ScnViewComponent >();
+	Canvas_ = getComponentAnyParentByType< ScnCanvasComponent >();
+	BcAssert( Canvas_ );
 
 	// Mine.
 	Parent->subscribe( 0, this,

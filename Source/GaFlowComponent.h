@@ -20,3 +20,4 @@ public:
 private:
 	ScnEntity* CurrentEntity_;
 };
+ 
