@@ -23,6 +23,7 @@ private:
 	BcF32 MiningDistance_;
 	BcF32 MiningRate_;
 	BcF32 MaxCapacity_;
+	BcF32 MaxExtents_;
 	BcF32 MiningSizeThreshold_;
 
 	enum class State

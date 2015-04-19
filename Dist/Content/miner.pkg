@@ -25,7 +25,8 @@
 					"maxvelocity" : 20.0,
 					"maxforce" : 12.0,
 					"miningdistance" : 4.0,
-					"maxcapacity" : 2.0
+					"maxcapacity" : 2.0,
+					"maxextents" : 24.0
 				},
 
 				{

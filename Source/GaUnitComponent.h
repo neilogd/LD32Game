@@ -37,6 +37,8 @@ public:
 	GaUnitComponent();
 	virtual ~GaUnitComponent();
 
+	void update( BcF32 Tick ) override;
+
 	void setTeam( BcU32 Team ) { Team_ = Team; }
 	BcU32 getTeam() const { return Team_; }
 	const std::vector< GaUnitAction >& getActions() const { return Actions_; }

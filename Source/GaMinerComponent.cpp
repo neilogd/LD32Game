@@ -23,6 +23,7 @@ void GaMinerComponent::StaticRegisterClass()
 		new ReField( "MiningDistance_", &GaMinerComponent::MiningDistance_, bcRFF_IMPORTER ),
 		new ReField( "MiningRate_", &GaMinerComponent::MiningRate_, bcRFF_IMPORTER ),
 		new ReField( "MaxCapacity_", &GaMinerComponent::MaxCapacity_, bcRFF_IMPORTER ),
+		new ReField( "MaxExtents_", &GaMinerComponent::MaxExtents_, bcRFF_IMPORTER ),		
 		new ReField( "MiningSizeThreshold_", &GaMinerComponent::MiningSizeThreshold_, bcRFF_IMPORTER ),
 
 		new ReField( "State_", &GaMinerComponent::State_, bcRFF_TRANSIENT ),
@@ -43,6 +44,7 @@ GaMinerComponent::GaMinerComponent():
 	MaxVelocity_( 0.0f ),
 	MaxForce_( 0.0f ),
 	MiningDistance_( 4.0f ),
+	MaxExtents_( 32.0f ),
 	MiningSizeThreshold_( 0.1f ),
 	MiningRate_( 0.1f ),
 	MaxCapacity_( 2.0f ),
@@ -66,6 +68,18 @@ GaMinerComponent::~GaMinerComponent()
 // update
 void GaMinerComponent::update( BcF32 Tick )
 {
+	ScnDebugRenderComponent::pImpl()->drawLine( 
+		MaVec3d( -100.0f, 0.0f, -MaxExtents_ ),
+		MaVec3d(  100.0f, 0.0f, -MaxExtents_ ),
+		RsColour::YELLOW,
+		0 );
+
+	ScnDebugRenderComponent::pImpl()->drawLine( 
+		MaVec3d( -100.0f, 0.0f, MaxExtents_ ),
+		MaVec3d(  100.0f, 0.0f, MaxExtents_ ),
+		RsColour::YELLOW,
+		0 );
+
 	switch( State_ )
 	{
 	case State::IDLE:
@@ -100,19 +114,20 @@ void GaMinerComponent::update( BcF32 Tick )
 	BcF32 Damping = 0.0f;
 	auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
 	auto Position = RigidBody->getPosition();
+
+
+	auto Displacement = TargetPosition_ - Position;
+	auto DisplacementMag = Displacement.magnitude();
+	if( DisplacementMag > 2.0f )
+	{
+		auto ForceAmount = Displacement.normal() * MaxForce_ * RigidBody->getMass();
+		RigidBody->applyCentralForce( ForceAmount );
+
+		// TODO: Draw thruster in opposite direction.
+	}
+
 	if( Target_ != nullptr )
 	{
-
-		auto Displacement = TargetPosition_ - Position;
-		auto DisplacementMag = Displacement.magnitude();
-		if( DisplacementMag > 2.0f )
-		{
-			auto ForceAmount = Displacement.normal() * MaxForce_ * RigidBody->getMass();
-			RigidBody->applyCentralForce( ForceAmount );
-			
-			// TODO: Draw thruster in opposite direction.
-		}
-
 		if( State_ == State::MINING )
 		{
 			if( DisplacementMag < ( MiningDistance_ * 1.1f ) )
@@ -166,8 +181,27 @@ void GaMinerComponent::update( BcF32 Tick )
 					Mothership->addResources( AmountMined );
 					AmountMined_ -= AmountMined;
 				}
+
+				// TODO: notify.
 				Target_ = nullptr;
 				State_ = State::IDLE;
+			}
+		}
+
+		// Out of bounds.
+		if( Position.z() < -MaxExtents_ || Position.z() > MaxExtents_ )
+		{
+			// TODO: notify.
+			Target_ = nullptr;
+			State_ = State::IDLE;
+
+			if( Position.z() < -MaxExtents_ )
+			{
+				TargetPosition_ = MaVec3d( Position.x(), Position.y(), Position.z() + 8.0f );
+			}
+			else
+			{
+				TargetPosition_ = MaVec3d( Position.x(), Position.y(), Position.z() - 8.0f );
 			}
 		}
 

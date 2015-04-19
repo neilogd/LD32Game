@@ -22,7 +22,7 @@
 				{
 					"type" : "GaMothershipComponent",
 
-					"minerentity" : "$(ScnEntity:miner.MinerEntity_0)",
+				"minerentity" : "$(ScnEntity:miner.MinerEntity_0)",
 					"totalresources" : 100.0
 				},
 

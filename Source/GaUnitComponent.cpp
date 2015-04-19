@@ -1,5 +1,7 @@
 #include "GaUnitComponent.h"
 
+#include "System/Scene/Rendering/ScnDebugRenderComponent.h"
+
 //////////////////////////////////////////////////////////////////////////
 // Define resource internals.
 REFLECTION_DEFINE_BASIC( GaUnitAction );
@@ -65,4 +67,15 @@ GaUnitComponent::GaUnitComponent():
 GaUnitComponent::~GaUnitComponent()
 {
 
+}
+
+//////////////////////////////////////////////////////////////////////////
+// update
+void GaUnitComponent::update( BcF32 Tick )
+{
+	auto Position = getParentEntity()->getWorldPosition();
+	auto GroundPosition = MaVec3d( Position.x(), -2.0f, Position.z() );
+
+	ScnDebugRenderComponent::pImpl()->drawLine( Position, GroundPosition, RsColour( 0.0f, 1.0f, 0.0f, 0.5f ), 0 );
+	ScnDebugRenderComponent::pImpl()->drawCircle( GroundPosition, MaVec3d( 0.5f, 0.5f, 0.5f ), RsColour( 0.0f, 1.0f, 0.0f, 0.5f ), 0 );
 }
