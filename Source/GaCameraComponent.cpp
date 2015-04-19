@@ -38,6 +38,10 @@ void GaCameraComponent::StaticRegisterClass()
 		.addAttribute( new ScnComponentAttribute( 0 ) );
 }
 
+BcF32 GaCameraComponent::ShakeMagnitude_ = 0.0f;
+BcF32 GaCameraComponent::ShakeTimer_ = 0.0f;
+
+
 //////////////////////////////////////////////////////////////////////////
 // Ctor
 GaCameraComponent::GaCameraComponent()
@@ -63,7 +67,9 @@ void GaCameraComponent::preUpdate( BcF32 Tick )
 {
 	Super::update( Tick );
 
-#if 1
+	ShakeTimer_ += Tick;
+
+#if 0
 	// Update state.
 	switch( CameraState_ )
 	{
@@ -106,9 +112,18 @@ void GaCameraComponent::preUpdate( BcF32 Tick )
 	MaVec3d ViewDistance = MaVec3d( 0.0f, 0.0f, CameraDistance_ );
 	MaMat4d CameraRotationMatrix = getCameraRotationMatrix();
 	ViewDistance = ViewDistance * CameraRotationMatrix;
-	MaVec3d ViewFromPosition = CameraTarget_ + ViewDistance;
 
-	Matrix.lookAt( ViewFromPosition, CameraTarget_, MaVec3d( CameraRotationMatrix.row1().x(), CameraRotationMatrix.row1().y(), CameraRotationMatrix.row1().z() ) );
+	ShakeMagnitude_ = std::max( 0.0f, ShakeMagnitude_ - Tick * 2.0f );
+	MaVec3d Shake = MaVec3d(
+		BcCos( ShakeTimer_ * 28.0f ),
+		BcSin( ShakeTimer_ * 34.0f ),
+		BcCos( ShakeTimer_ * 40.0f ) );
+
+	MaVec3d CameraPos = CameraTarget_ + ( Shake * ShakeMagnitude_ );
+
+	MaVec3d ViewFromPosition = CameraPos + ViewDistance;
+
+	Matrix.lookAt( ViewFromPosition, CameraPos, MaVec3d( CameraRotationMatrix.row1().x(), CameraRotationMatrix.row1().y(), CameraRotationMatrix.row1().z() ) );
 	Matrix.inverse();
 	//Matrix.rotation( MaVec3d( BcPIDIV2 - ( BcPI / 16.0f ), 0.0f, 0.0f ) );
 	//Matrix.translation( MaVec3d( 0.0f, -4.0f, -2.0f ) );
@@ -213,6 +228,8 @@ eEvtReturn GaCameraComponent::onMouseMove( EvtID ID, const EvtBaseEvent& Event )
 	const auto& MouseEvent = Event.get< OsEventInputMouse >();
 
 	LastMouseEvent_ = MouseEvent;
+	//CameraTarget_.x( -LastMouseEvent_.NormalisedX_ * 6.0f );
+	//CameraTarget_.z( LastMouseEvent_.NormalisedY_ * 6.0f );
 
 	return evtRET_PASS;
 }

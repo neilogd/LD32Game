@@ -28,6 +28,9 @@ private:
 	BcF32 Size_;
 	BcF32 OldSize_;
 
+	class ScnParticleSystemComponent* ParticlesAdd_;
+	class ScnParticleSystemComponent* ParticlesSub_;
+
 public:
 	class GaUnitComponent* Unit_;
 	class ScnPhysicsCollisionComponent* Collision_;

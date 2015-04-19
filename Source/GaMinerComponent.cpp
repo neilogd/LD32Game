@@ -1,5 +1,6 @@
 #include "GaMinerComponent.h"
 #include "GaAsteroidComponent.h"
+#include "GaCameraComponent.h"
 #include "GaUnitComponent.h"
 #include "GaMothershipComponent.h"
 
@@ -58,7 +59,8 @@ GaMinerComponent::GaMinerComponent():
 	TargetRigidBody_( nullptr ),
 	AmountMined_( 0.0f ),
 	Unit_( nullptr ),
-	RigidBody_( nullptr )
+	RigidBody_( nullptr ),
+	PulseTimer_( 0.0f )
 {
 
 }
@@ -125,7 +127,32 @@ void GaMinerComponent::update( BcF32 Tick )
 	{
 	case State::IDLE:
 		{
-
+			if( isFull( 0.9f ) )
+			{
+				if( PulseTimer_ < 0.0f )
+				{
+					PulseTimer_ = 0.4f;
+					ScnParticle* Particle = nullptr;
+					if( ParticlesAdd_->allocParticle( Particle ) )
+					{
+						Particle->Position_ = Position * 2.0f;
+						Particle->Velocity_ = MaVec3d( 0.0f, 0.0f, 0.0f );
+						Particle->Acceleration_ = MaVec3d( 0.0f, 0.0f, 0.0f );
+						Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+						Particle->MinScale_ = MaVec2d( 3.2f, 3.2f );
+						Particle->MaxScale_ = MaVec2d( 10.5f, 10.5f );
+						Particle->Rotation_ = BcRandom::Global.randReal();
+						Particle->RotationMultiplier_ = BcRandom::Global.randReal() * 2.0f;
+						Particle->Colour_ = RsColour( 1.0f, 1.0f, 0.0f, 1.0f );
+						Particle->MinColour_ = RsColour( 1.0f, 0.5f, 0.0f, 1.0f );
+						Particle->MaxColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+						Particle->TextureIndex_ = 8;
+						Particle->CurrentTime_ = 0.0f;
+						Particle->MaxTime_ = 0.7f;
+						Particle->Alive_ = BcTrue;
+					}
+				}
+			}
 		}
 		break;
 
@@ -156,16 +183,16 @@ void GaMinerComponent::update( BcF32 Tick )
 	if( TargetPosition_.z() < -ZMax || TargetPosition_.z() > ( ZMax - 2.0f ) )
 	{
 		// TODO: notify.
-		setTarget( nullptr );
-		State_ = State::IDLE;
+		//setTarget( nullptr );
+		//State_ = State::IDLE;
 
 		if( TargetPosition_.z() < -ZMax )
 		{
-			TargetPosition_ = MaVec3d( TargetPosition_.x(), TargetPosition_.y(), TargetPosition_.z() + 8.0f );
+			TargetPosition_ = MaVec3d( TargetPosition_.x(), TargetPosition_.y(), -ZMax + 8.0f );
 		}
 		else
 		{
-			TargetPosition_ = MaVec3d( TargetPosition_.x(), TargetPosition_.y(), TargetPosition_.z() - 8.0f );
+			TargetPosition_ = MaVec3d( TargetPosition_.x(), TargetPosition_.y(), ZMax - 8.0f );
 		}
 	}
 
@@ -173,16 +200,16 @@ void GaMinerComponent::update( BcF32 Tick )
 	if( TargetPosition_.x() < -XMax || TargetPosition_.x() > XMax )
 	{
 		// TODO: notify.
-		setTarget( nullptr );
-		State_ = State::IDLE;
+		//setTarget( nullptr );
+		//State_ = State::IDLE;
 
 		if( TargetPosition_.x() < -XMax )
 		{
-			TargetPosition_ = MaVec3d( TargetPosition_.x() + 8.0f, TargetPosition_.y(), TargetPosition_.z() );
+			TargetPosition_ = MaVec3d( TargetPosition_.x() + 8.0f, TargetPosition_.y(), -XMax + 8.0f );
 		}
 		else
 		{
-			TargetPosition_ = MaVec3d( TargetPosition_.x() - 8.0f, TargetPosition_.y(), TargetPosition_.z() );
+			TargetPosition_ = MaVec3d( TargetPosition_.x() - 8.0f, TargetPosition_.y(), XMax - 8.0f );
 		}
 	}
 
@@ -260,6 +287,79 @@ void GaMinerComponent::update( BcF32 Tick )
 					AmountMined_ += AmountMined;
 					TargetAsteroid_->setSize( Size );
 
+					{
+						ScnParticle* Particle = nullptr;
+						auto AsteroidPosition =  TargetAsteroid_->RigidBody_->getPosition() ;
+						// Smoke.
+						for( BcU32 Idx = 0; Idx < 1; ++Idx )
+						{
+							if( ParticlesSub_->allocParticle( Particle ) )
+							{
+								Particle->Position_ = AsteroidPosition * 2.0f;
+								Particle->Velocity_ = MaVec3d(
+									BcRandom::Global.randReal(),
+									BcRandom::Global.randReal(),
+									BcRandom::Global.randReal() ) * 0.5f;
+								Particle->Acceleration_ = -Particle->Velocity_ * 2.0f;
+								Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+								Particle->MinScale_ = MaVec2d( 1.2f, 1.2f );
+								Particle->MaxScale_ = MaVec2d( 16.5f, 16.5f );
+								Particle->Rotation_ = BcRandom::Global.randReal();
+								Particle->RotationMultiplier_ = BcRandom::Global.randReal() * 2.0f;
+								Particle->Colour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+								Particle->MinColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+								Particle->MaxColour_ = RsColour( 1.0f, 1.0f, 1.0f, 0.0f );
+								Particle->TextureIndex_ = BcRandom::Global.randRange( 4, 6 );
+								Particle->CurrentTime_ = 0.0f;
+								Particle->MaxTime_ = BcRandom::Global.randRealRange( 0.1f, 0.5f );
+								Particle->Alive_ = BcTrue;
+							}
+
+							if( ParticlesAdd_->allocParticle( Particle ) )
+							{
+								Particle->Position_ = AsteroidPosition * 2.0f;
+								Particle->Velocity_ = MaVec3d(
+									BcRandom::Global.randReal(),
+									BcRandom::Global.randReal(),
+									BcRandom::Global.randReal() ) * 0.5f;
+								Particle->Acceleration_ = -Particle->Velocity_ * 2.0f;
+								Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+								Particle->MinScale_ = MaVec2d( 1.2f, 1.2f );
+								Particle->MaxScale_ = MaVec2d( 16.5f, 16.5f );
+								Particle->Rotation_ = BcRandom::Global.randReal();
+								Particle->RotationMultiplier_ = BcRandom::Global.randReal() * 2.0f;
+								Particle->Colour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+								Particle->MinColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+								Particle->MaxColour_ = RsColour( 1.0f, 1.0f, 1.0f, 0.0f );
+								Particle->TextureIndex_ = BcRandom::Global.randRange( 4, 6 );
+								Particle->CurrentTime_ = 0.0f;
+								Particle->MaxTime_ = BcRandom::Global.randRealRange( 0.2f, 0.7f );
+								Particle->Alive_ = BcTrue;
+							}
+						}
+
+						if( ParticlesAdd_->allocParticle( Particle ) )
+						{
+							auto ToAsteroid = Position - AsteroidPosition;
+							Particle->Position_ = Position * 2.0f;
+							Particle->Velocity_ = -ToAsteroid * 10.0f;
+							Particle->Acceleration_ = MaVec3d( 0.0f, 0.0f, 0.0f );
+							Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+							Particle->MinScale_ = MaVec2d( 1.2f, 1.2f );
+							Particle->MaxScale_ = MaVec2d( 1.5f, 1.5f );
+							Particle->Rotation_ = BcRandom::Global.randReal();
+							Particle->RotationMultiplier_ = BcRandom::Global.randReal() * 2.0f;
+							Particle->Colour_ = RsColour( 1.0f, 1.0f, 0.0f, 1.0f );
+							Particle->MinColour_ = RsColour( 1.0f, 0.5f, 0.0f, 1.0f );
+							Particle->MaxColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+							Particle->TextureIndex_ = 0;
+							Particle->CurrentTime_ = 0.0f;
+							Particle->MaxTime_ = ToAsteroid.magnitude() / Particle->Velocity_.magnitude();
+							Particle->Alive_ = BcTrue;
+						}
+
+					}
+
 					// Return when asteroid is deaded, or TODO we are full.
 					if( Size < MiningSizeThreshold_ )
 					{
@@ -289,6 +389,55 @@ void GaMinerComponent::update( BcF32 Tick )
 					auto AmountMined = std::min( AmountMined_, Tick * MiningRate_ );
 					TargetMothership_->addResources( AmountMined * 100.0f );
 					AmountMined_ -= AmountMined;
+
+					auto MothershipPosition = TargetMothership_->RigidBody_->getPosition();
+
+					ScnParticle* Particle = nullptr;
+					
+					if( ParticlesAdd_->allocParticle( Particle ) )
+					{
+						auto ToAsteroid = Position - MothershipPosition;
+						Particle->Position_ = Position * 2.0f;
+						Particle->Velocity_ = -ToAsteroid * 2.0f;
+						Particle->Acceleration_ = MaVec3d( 0.0f, 0.0f, 0.0f );
+						Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+						Particle->MinScale_ = MaVec2d( 1.2f, 1.2f );
+						Particle->MaxScale_ = MaVec2d( 2.5f, 2.5f );
+						Particle->Rotation_ = BcRandom::Global.randReal();
+						Particle->RotationMultiplier_ = BcRandom::Global.randReal() * 2.0f;
+						Particle->Colour_ = RsColour( 1.0f, 1.0f, 0.0f, 1.0f );
+						Particle->MinColour_ = RsColour( 1.0f, 0.5f, 0.0f, 1.0f );
+						Particle->MaxColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+						Particle->TextureIndex_ = 0;
+						Particle->CurrentTime_ = 0.0f;
+						Particle->MaxTime_ = ToAsteroid.magnitude() / Particle->Velocity_.magnitude();
+						Particle->Alive_ = BcTrue;
+					}
+
+					if( PulseTimer_ < 0.0f )
+					{
+						PulseTimer_ = 0.4f;
+
+						if( ParticlesAdd_->allocParticle( Particle ) )
+						{
+							auto ToAsteroid = Position - MothershipPosition;
+							Particle->Position_ = Position * 2.0f;
+							Particle->Velocity_ = -ToAsteroid * 1.0f;
+							Particle->Acceleration_ = MaVec3d( 0.0f, 0.0f, 0.0f );
+							Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+							Particle->MinScale_ = MaVec2d( 3.2f, 3.2f );
+							Particle->MaxScale_ = MaVec2d( 10.5f, 10.5f );
+							Particle->Rotation_ = BcRandom::Global.randReal();
+							Particle->RotationMultiplier_ = BcRandom::Global.randReal() * 2.0f;
+							Particle->Colour_ = RsColour( 1.0f, 1.0f, 0.0f, 1.0f );
+							Particle->MinColour_ = RsColour( 1.0f, 0.5f, 0.0f, 1.0f );
+							Particle->MaxColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+							Particle->TextureIndex_ = 8;
+							Particle->CurrentTime_ = 0.0f;
+							Particle->MaxTime_ = ToAsteroid.magnitude() / Particle->Velocity_.magnitude();
+							Particle->Alive_ = BcTrue;
+						}
+					}
 				}
 				else
 				{
@@ -318,6 +467,8 @@ void GaMinerComponent::update( BcF32 Tick )
 	{
 		CirclingTimer_ -= BcPIMUL2;
 	}
+
+	PulseTimer_ -= Tick;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -397,6 +548,110 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 
 								// Apply impulse based on our *own* mass + amount mined..
 								AsteroidRigidBody->applyCentralImpulse( Displacement.normal() * ( Event.BodyA_->getMass() + AmountMined_ * 10.0f ) );
+
+								GaCameraComponent::addShake( 0.3f );
+
+								// Debris.
+								BcF32 Damage = 15.0f;
+								ScnParticle* Particle = nullptr;
+								for( BcU32 Idx = 0; Idx < BcU32( Damage * 5.0f ); ++Idx )
+								{
+									if( ParticlesAdd_->allocParticle( Particle ) )
+									{
+										Particle->Position_ = Event.ContactPoints_[ 0 ].PointA_ * 2.0f;
+										Particle->Velocity_ = MaVec3d(
+											BcRandom::Global.randReal(),
+											BcRandom::Global.randReal(),
+											BcRandom::Global.randReal() ) * Damage * 3.0f;
+										Particle->Acceleration_ = MaVec3d( 0.0f, 0.0f, 0.0f );
+										Particle->Scale_ = MaVec2d( 0.0f, 0.1f );
+										Particle->MinScale_ = MaVec2d( 0.1f, 0.1f );
+										Particle->MaxScale_ = MaVec2d( 0.1f, 0.1f );
+										Particle->Rotation_ = BcRandom::Global.randReal();
+										Particle->RotationMultiplier_ = BcRandom::Global.randReal();
+										Particle->Colour_ = RsColour( 1.0f, 0.9f, 0.8f, 1.0f );
+										Particle->MinColour_ = RsColour( 1.0f, 0.9f, 0.8f, 1.0f );
+										Particle->MaxColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+										Particle->TextureIndex_ = 0;
+										Particle->CurrentTime_ = 0.0f;
+										Particle->MaxTime_ = 0.5f;
+										Particle->Alive_ = BcTrue;
+									}
+								}
+
+								// Smoke.
+								for( BcU32 Idx = 0; Idx < 10; ++Idx )
+								{
+									if( ParticlesSub_->allocParticle( Particle ) )
+									{
+										Particle->Position_ = Event.ContactPoints_[ 0 ].PointA_ * 2.0f;
+										Particle->Velocity_ = MaVec3d(
+											BcRandom::Global.randReal(),
+											BcRandom::Global.randReal(),
+											BcRandom::Global.randReal() ) * Damage * 0.5f;
+										Particle->Acceleration_ = -Particle->Velocity_ * 2.0f;
+										Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+										Particle->MinScale_ = MaVec2d( 1.2f, 1.2f );
+										Particle->MaxScale_ = MaVec2d( 32.5f, 32.5f );
+										Particle->Rotation_ = BcRandom::Global.randReal();
+										Particle->RotationMultiplier_ = BcRandom::Global.randReal() * 2.0f;
+										Particle->Colour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+										Particle->MinColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+										Particle->MaxColour_ = RsColour( 1.0f, 1.0f, 1.0f, 0.0f );
+										Particle->TextureIndex_ = BcRandom::Global.randRange( 4, 6 );
+										Particle->CurrentTime_ = 0.0f;
+										Particle->MaxTime_ = BcRandom::Global.randRealRange( 0.5f, 1.2f );
+										Particle->Alive_ = BcTrue;
+									}
+
+									if( ParticlesAdd_->allocParticle( Particle ) )
+									{
+										Particle->Position_ = Event.ContactPoints_[ 0 ].PointA_ * 2.0f;
+										Particle->Velocity_ = MaVec3d(
+											BcRandom::Global.randReal(),
+											BcRandom::Global.randReal(),
+											BcRandom::Global.randReal() ) * Damage * 0.5f;
+										Particle->Acceleration_ = -Particle->Velocity_ * 2.0f;
+										Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+										Particle->MinScale_ = MaVec2d( 1.2f, 1.2f );
+										Particle->MaxScale_ = MaVec2d( 32.5f, 32.5f );
+										Particle->Rotation_ = BcRandom::Global.randReal();
+										Particle->RotationMultiplier_ = BcRandom::Global.randReal() * 2.0f;
+										Particle->Colour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+										Particle->MinColour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+										Particle->MaxColour_ = RsColour( 1.0f, 1.0f, 1.0f, 0.0f );
+										Particle->TextureIndex_ = BcRandom::Global.randRange( 4, 6 );
+										Particle->CurrentTime_ = 0.0f;
+										Particle->MaxTime_ = BcRandom::Global.randRealRange( 0.5f, 1.2f );
+										Particle->Alive_ = BcTrue;
+									}
+								}
+
+								// Flames.
+								for( BcU32 Idx = 0; Idx < 10; ++Idx )
+								{
+									if( ParticlesAdd_->allocParticle( Particle ) )
+									{
+										Particle->Position_ = Event.ContactPoints_[ 0 ].PointA_ * 2.0f;
+										Particle->Velocity_ = MaVec3d(
+											BcRandom::Global.randReal(),
+											BcRandom::Global.randReal(),
+											BcRandom::Global.randReal() ) * Damage * 0.5f;
+										Particle->Acceleration_ = -Particle->Velocity_ * 0.3f;
+										Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+										Particle->MinScale_ = MaVec2d( 1.2f, 1.2f );
+										Particle->MaxScale_ = MaVec2d( 16.5f, 16.5f );
+										Particle->Rotation_ = BcRandom::Global.randReal();
+										Particle->RotationMultiplier_ = BcRandom::Global.randReal();
+										Particle->Colour_ = RsColour( 1.0f, 0.0f, 0.0f, 1.0f );
+										Particle->MinColour_ = RsColour( 1.0f, 0.0f, 0.0f, 1.0f );
+										Particle->MaxColour_ = RsColour( 1.0f, 1.0f, 0.0f, 0.0f );
+										Particle->TextureIndex_ = BcRandom::Global.randRange( 4, 6 );
+										Particle->CurrentTime_ = 0.0f;
+										Particle->MaxTime_ = BcRandom::Global.randRealRange( 0.3f, 0.5f );
+										Particle->Alive_ = BcTrue;
+									}
+								}
 
 								// Remove ourself.
 								ScnCore::pImpl()->removeEntity( getParentEntity() );

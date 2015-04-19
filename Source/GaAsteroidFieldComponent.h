@@ -33,5 +33,8 @@ private:
 	BcF32 Margin_;
 
 	std::vector< GaAsteroidComponent* > Asteroids_;
+
+	class ScnParticleSystemComponent* ParticlesAdd_;
+	class ScnParticleSystemComponent* ParticlesSub_;
 };
 

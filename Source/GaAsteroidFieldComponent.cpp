@@ -3,6 +3,7 @@
 #include "GaUnitComponent.h"
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
+#include "System/Scene/Rendering/ScnParticleSystemComponent.h"
 #include "System/Scene/Physics/ScnPhysicsWorldComponent.h"
 #include "System/Scene/Physics/ScnPhysicsRigidBodyComponent.h"
 #include "System/Scene/Physics/ScnPhysicsSphereCollisionComponent.h"
@@ -131,6 +132,34 @@ void GaAsteroidFieldComponent::update( BcF32 Tick )
 
 	}
 
+	// Starfield particles.
+	ScnParticle* Particle = nullptr;
+	if( ParticlesAdd_->allocParticle( Particle ) )
+	{
+		MaVec3d NewPosition = MaVec3d(
+			BcRandom::Global.randRealRange( -Width_ * 6.0f, Width_ * 6.0f ),
+			-6.0f,
+			-MaxExtents_ + 0.05f );
+
+		BcF32 TravelDistance = MaxExtents_ * 2.0f;
+
+		Particle->Position_ = NewPosition;
+		Particle->Velocity_ = MaVec3d( 0.0f, 0.0f, BcRandom::Global.randRealRange( 5.0f, 20.0f ) );
+		Particle->Acceleration_ = MaVec3d( 0.0f, 0.0f, 0.0f );
+		Particle->Scale_ = MaVec2d( 0.1f, 0.1f );
+		Particle->MinScale_ = MaVec2d( 2.2f, 2.2f );
+		Particle->MaxScale_ = MaVec2d( 2.2f, 2.2f );
+		Particle->Rotation_ = 0.0f;
+		Particle->RotationMultiplier_ = 0.0f;
+		Particle->Colour_ = RsColour( 0.0f, 0.0f, 0.0f, 1.0f );
+		Particle->MinColour_ = RsColour( 0.0f, 0.0f, 0.0f, 4.0f );
+		Particle->MaxColour_ = RsColour( 4.0f, 4.0f, 4.0f, 0.0f );
+		Particle->TextureIndex_ = 7;
+		Particle->CurrentTime_ = 0.0f;
+		Particle->MaxTime_ = TravelDistance / Particle->Velocity_.z();
+		Particle->Alive_ = BcTrue;
+	}
+
 	Super::update( Tick );
 }
 
@@ -170,6 +199,11 @@ void GaAsteroidFieldComponent::onAttach( ScnEntityWeakRef Parent )
 
 		recycle( AsteroidComponent, BcFalse );
 	}
+
+	ParticlesAdd_ = getComponentAnyParentByType< ScnParticleSystemComponent >( 0 );
+	BcAssert( ParticlesAdd_ );
+	ParticlesSub_ = getComponentAnyParentByType< ScnParticleSystemComponent >( 1 );
+	BcAssert( ParticlesSub_ );
 
 	Super::onAttach( Parent );
 }

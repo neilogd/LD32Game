@@ -50,6 +50,9 @@ private:
 	BcF32 RepairWeight_;
 	BcF32 ReturnWeight_;
 
+	class ScnParticleSystemComponent* ParticlesAdd_;
+	class ScnParticleSystemComponent* ParticlesSub_;
+
 public:
 	class GaUnitComponent* Unit_;
 	class ScnPhysicsRigidBodyComponent* RigidBody_;

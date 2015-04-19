@@ -65,7 +65,9 @@ private:
 
 	class ScnParticleSystemComponent* ParticlesAdd_;
 	class ScnParticleSystemComponent* ParticlesSub_;
-	struct ScnParticle* ShadowParticle_;;
+	struct ScnParticle* ShadowParticle_;
+
+	BcF32 PulseTimer_;
 
 public:
 	class GaUnitComponent* Unit_;

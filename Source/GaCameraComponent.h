@@ -48,11 +48,16 @@ public:
 	eEvtReturn onKeyUp( EvtID ID, const EvtBaseEvent& Event );
 
 	MaMat4d getCameraRotationMatrix() const;
+
+	static void addShake( BcF32 Amount ){ ShakeMagnitude_ += Amount; }
 	
 private:
 	MaVec3d CameraRotation_;
 	BcF32 CameraDistance_;
 	BcF32 CameraZoom_;
+
+	static BcF32 ShakeMagnitude_;
+	static BcF32 ShakeTimer_;
 
 	MaVec3d CameraTarget_;
 

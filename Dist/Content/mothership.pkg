@@ -13,7 +13,7 @@
 				{
 					"type" : "ScnPhysicsRigidBodyComponent",
 
-					"mass" : 100.0,
+					"mass" : 80.0,
 					"friction" : 1.0,
 					"rollingfriction" : 1.0,
 					"restitution" : 0.8

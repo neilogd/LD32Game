@@ -34,6 +34,12 @@
 				},
 
 				{
+					"type" : "ScnParticleSystemComponent",
+					"noofparticles" : 100,
+					"material" : "$(ScnMaterial:materials.particles_blend)"
+				},
+
+				{
 					"type" : "ScnDebugRenderComponent",
 					"noofvertices" : 65536,
 					"material" : "$(ScnMaterial:materials.debugrender)"
