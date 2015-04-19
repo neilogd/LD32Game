@@ -38,9 +38,28 @@
 				},
 
 				{
+					"type" : "ScnSoundEmitterComponent"
+				},
+
+				{
+					"type" : "ScnSoundEmitterComponent"
+				},
+
+				{
 					"type" : "GaUnitComponent",
 					"team" : 1,
 					"shadowsize" : 48.0,
+
+					"sounds" : {
+						"build" : "$(ScnSound:sounds.build)",
+						"impact" : "$(ScnSound:sounds.impact)",
+						"mining" : "$(ScnSound:sounds.mining)",
+						"minor_impact0" : "$(ScnSound:sounds.minor_impact0)",
+						"minor_impact1" : "$(ScnSound:sounds.minor_impact1)",
+						"repair" : "$(ScnSound:sounds.repair)",
+						"returning" : "$(ScnSound:sounds.returning)",
+						"thrust" : "$(ScnSound:sounds.thrust)"
+					},
 
 					"actions" : [
 						{

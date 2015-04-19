@@ -85,6 +85,8 @@ void GaAsteroidComponent::onAttach( ScnEntityWeakRef Parent )
 			ScnParticle* Particle = nullptr;
 			auto TotalVel = Event.BodyA_->getLinearVelocity().magnitude() + Event.BodyA_->getLinearVelocity().magnitude();
 
+			//Unit_->playSound( "minor_impact0" );
+
 			for( BcU32 Idx = 0; Idx < 10; ++Idx )
 			{
 				if( ParticlesAdd_->allocParticle( Particle ) )

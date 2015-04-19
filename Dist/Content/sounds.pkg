@@ -1,0 +1,84 @@
+{
+	"resources" : [
+		{
+			"type"			: "ScnSound",
+			"name"			: "blip",
+
+			"source"		: "Content/Source/Sound/blip.sfs",
+			"isstream"		: false,
+			"isloop"		: false
+		},
+		
+		{
+			"type"			: "ScnSound",
+			"name"			: "build",
+
+			"source"		: "Content/Source/Sound/build.ogg",
+			"isstream"		: false,
+			"isloop"		: false
+		},
+		
+		{
+			"type"			: "ScnSound",
+			"name"			: "impact",
+
+			"source"		: "Content/Source/Sound/impact.ogg",
+			"isstream"		: false,
+			"isloop"		: false
+		},
+
+		{
+			"type"			: "ScnSound",
+			"name"			: "mining",
+
+			"source"		: "Content/Source/Sound/mining.ogg",
+			"isstream"		: false,
+			"isloop"		: true
+		},
+
+		{
+			"type"			: "ScnSound",
+			"name"			: "minor_impact0",
+
+			"source"		: "Content/Source/Sound/minor_impact0.ogg",
+			"isstream"		: false,
+			"isloop"		: false
+		},
+	
+		{
+			"type"			: "ScnSound",
+			"name"			: "minor_impact1",
+
+			"source"		: "Content/Source/Sound/minor_impact1.ogg",
+			"isstream"		: false,
+			"isloop"		: false
+		},
+
+		{
+			"type"			: "ScnSound",
+			"name"			: "repair",
+
+			"source"		: "Content/Source/Sound/repair.ogg",
+			"isstream"		: false,
+			"isloop"		: false
+		},
+
+		{
+			"type"			: "ScnSound",
+			"name"			: "returning",
+
+			"source"		: "Content/Source/Sound/returning.ogg",
+			"isstream"		: false,
+			"isloop"		: true
+		},		
+
+		{
+			"type"			: "ScnSound",
+			"name"			: "thrust",
+
+			"source"		: "Content/Source/Sound/thrust.ogg",
+			"isstream"		: false,
+			"isloop"		: true
+		}
+	]
+}

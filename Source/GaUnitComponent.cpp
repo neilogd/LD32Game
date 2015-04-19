@@ -1,7 +1,10 @@
 #include "GaUnitComponent.h"
 
+#include "System/Content/CsCore.h"
+
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Rendering/ScnParticleSystemComponent.h"
+#include "System/Scene/Sound/ScnSoundEmitter.h"
 
 //////////////////////////////////////////////////////////////////////////
 // Constants.
@@ -70,7 +73,7 @@ GaUnitComponent::GaUnitComponent():
 	ParticlesSub_( nullptr ),
 	ShadowParticle_( nullptr )
 {
-
+	SoundEmitters_.fill( nullptr );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -107,6 +110,11 @@ void GaUnitComponent::update( BcF32 Tick )
 // onAttach
 void GaUnitComponent::onAttach( ScnEntityWeakRef Parent )
 {
+	for( BcU32 Idx = 0; Idx < SoundEmitters_.size(); ++Idx )
+	{
+		SoundEmitters_[ Idx ] = getComponentAnyParentByType< ScnSoundEmitterComponent >( Idx );
+	}
+
 	ParticlesAdd_ = getComponentAnyParentByType< ScnParticleSystemComponent >( 0 );
 	BcAssert( ParticlesAdd_ );
 	ParticlesSub_ = getComponentAnyParentByType< ScnParticleSystemComponent >( 1 );
@@ -160,5 +168,29 @@ RsColour GaUnitComponent::getTeamColour() const
 	case 2:
 		return RsColour::BLUE;
 
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// playLoop
+void GaUnitComponent::playSound( BcU32 Channel, const std::string Name )
+{
+	ScnSoundRef Sound;
+	if( CsCore::pImpl()->requestResource( "sounds", Name, Sound ) )
+	{
+		if( SoundEmitters_[ Channel ] )
+		{
+			SoundEmitters_[ Channel ]->play( Sound );
+		}
+	}	
+}
+
+//////////////////////////////////////////////////////////////////////////
+// stopLoop
+void GaUnitComponent::stopSound( BcU32 Channel )
+{
+	if( SoundEmitters_[ Channel ] )
+	{
+		SoundEmitters_[ Channel ]->stopAll();
 	}
 }

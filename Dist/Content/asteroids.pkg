@@ -34,10 +34,17 @@
 				},
 
 				{
+					"type" : "ScnSoundEmitterComponent"
+				},
+
+				{
+					"type" : "ScnSoundEmitterComponent"
+				},
+
+				{
 					"type" : "GaUnitComponent",
 					"team" : 0,
 					"shadowsize" : 10.0
-
 				}
 			]
 		},

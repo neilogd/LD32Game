@@ -54,13 +54,17 @@ public:
 	BcU32 getTeam() const { return Team_; }
 	const std::vector< GaUnitAction >& getActions() const { return Actions_; }
 
+	void playSound( BcU32 Channel, const std::string Name );
+	void stopSound( BcU32 Channel );
+
 private:
 	BcU32 Team_;
 	std::vector< GaUnitAction > Actions_;
 
 	BcF32 ShadowSize_;
 
+	std::array< class ScnSoundEmitterComponent*, 4 > SoundEmitters_;
 	class ScnParticleSystemComponent* ParticlesAdd_;
 	class ScnParticleSystemComponent* ParticlesSub_;
-	struct ScnParticle* ShadowParticle_;;
+	struct ScnParticle* ShadowParticle_;
 };

@@ -259,6 +259,9 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 			{
 				PSY_LOG( "GaMothershipComponent: Build event." );
 
+				Unit_->playSound( 0, "build" );
+
+
 				MaMat4d MinerTransform0 = getParentEntity()->getWorldMatrix();
 				MinerTransform0.translation( MinerTransform0.translation() + MaVec3d( 0.0f, 5.0f, 0.0f ) );
 
@@ -274,7 +277,7 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 				auto MinerUnit = MinerEntity0->getComponentByType< GaUnitComponent >();
 				MinerUnit->setTeam( getComponentByType< GaUnitComponent >()->getTeam() );
 
-				auto MinerComponent = MinerEntity0->getComponentByType< GaMinerComponent >();
+ 				auto MinerComponent = MinerEntity0->getComponentByType< GaMinerComponent >();
 				BcAssert( MinerComponent );
 				MinerComponent->addNotifier( this );
 				Miners_.push_back( MinerComponent );
@@ -299,6 +302,7 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 			if( TotalHull_ < 100.0f && subResources( 50.0f ) )
 			{
 				PSY_LOG( "GaMothershipComponent: Repair event." );
+				Unit_->playSound( 0, "repair" );
 				TotalHull_ += 10.0f;
 
 				TotalHull_ = std::min( 100.0f, TotalHull_ );
@@ -320,6 +324,8 @@ void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 				auto Damage = 10.0f * AsteroidComponent->getSize();
 				PSY_LOG( "GaMothershipComponent: Collision. Take damage: %f", Damage );
 				TotalHull_ = std::max( 0.0f, TotalHull_ - Damage );
+
+				Unit_->playSound( 0, "impact" );
 
 				GaCameraComponent::addShake( Damage * 0.05f );
 

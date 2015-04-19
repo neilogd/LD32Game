@@ -154,6 +154,8 @@ void GaGameComponent::update( BcF32 Tick )
 					Event.SourceUnit_ = SelectedUnit_;
 					Event.TargetUnit_ = ClickedUnit;
 					SelectedUnit_->getParentEntity()->publish( Action->ActionID_, Event );
+					SelectedUnit_->playSound( 3, "blip" );
+
 					PerformedAction = BcTrue;
 				}
 			}
@@ -165,7 +167,11 @@ void GaGameComponent::update( BcF32 Tick )
 				{
 					if( SelectedUnit_ ) SelectedUnit_->removeNotifier( this );
 					SelectedUnit_ = ClickedUnit;
-					if( SelectedUnit_ ) SelectedUnit_->addNotifier( this );
+					if( SelectedUnit_ )
+					{
+						SelectedUnit_->addNotifier( this );
+						SelectedUnit_->playSound( 3, "blip" );
+					}
 				}
 			}
 		}

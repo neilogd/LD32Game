@@ -52,6 +52,9 @@ GaMinerComponent::GaMinerComponent():
 	MiningRate_( 0.1f ),
 	MaxCapacity_( 2.0f ),
 	CirclingTimer_( 0.0f ),
+	ReturningLastFrame_( BcFalse ),
+	MiningLastFrame_( BcFalse ),
+	ThrustingLastFrame_( BcFalse ),
 	TargetPosition_( 0.0f, 0.0f, 0.0f ),
 	Target_( nullptr ),
 	TargetAsteroid_( nullptr ),
@@ -222,6 +225,11 @@ void GaMinerComponent::update( BcF32 Tick )
 		auto ForceAmount = Displacement.normal() * MaxForce_ * RigidBody_->getMass();
 		RigidBody_->applyCentralForce( ForceAmount );
 		
+		if( !ThrustingLastFrame_ )
+		{
+			Unit_->playSound( 0, "thrust" );
+			ThrustingLastFrame_ = BcTrue;
+		}
 		MaMat4d LookAt;
 		LookAt.lookAt( MaVec3d( 0.0f, 0.0f, 0.0f ), ForceAmount + MaVec3d( 0.0f, 0.0f, 0.00000001f ), MaVec3d( 0.0f, 1.0f, 0.0f ) );
 		LookAt.transpose();
@@ -257,6 +265,8 @@ void GaMinerComponent::update( BcF32 Tick )
 	}
 	else
 	{
+		Unit_->stopSound( 0 );
+		ThrustingLastFrame_ = BcFalse;
 		// Velocity direction.
 		MaMat4d LookAt;
 		LookAt.lookAt( MaVec3d( 0.0f, 0.0f, 0.0f ), RigidBody_->getLinearVelocity() + MaVec3d( 0.0f, 0.0f, 0.00000001f ), MaVec3d( 0.0f, 1.0f, 0.0f ) );
@@ -277,6 +287,11 @@ void GaMinerComponent::update( BcF32 Tick )
 					RsColour::ORANGE,
 					0 );
 
+				if( !MiningLastFrame_ )
+				{
+					Unit_->playSound( 1, "mining" );
+					MiningLastFrame_ = BcTrue;
+				}
 				BcAssert( TargetAsteroid_ );
 
 				if( AmountMined_ < MaxCapacity_ )
@@ -363,6 +378,7 @@ void GaMinerComponent::update( BcF32 Tick )
 					// Return when asteroid is deaded, or TODO we are full.
 					if( Size < MiningSizeThreshold_ )
 					{
+						MiningLastFrame_ = BcFalse;
 						setTarget( nullptr );
 						State_ = State::IDLE;
 
@@ -371,11 +387,16 @@ void GaMinerComponent::update( BcF32 Tick )
 				}
 				else
 				{
+					MiningLastFrame_ = BcFalse;
 					setTarget( nullptr );
 					State_ = State::IDLE;
 
 					// TODO: notify Returning.
 				}
+			}
+			else
+			{
+				MiningLastFrame_ = BcFalse;
 			}
 		}
 		else if( State_ == State::RETURNING )
@@ -389,6 +410,12 @@ void GaMinerComponent::update( BcF32 Tick )
 					auto AmountMined = std::min( AmountMined_, Tick * MiningRate_ );
 					TargetMothership_->addResources( AmountMined * 100.0f );
 					AmountMined_ -= AmountMined;
+
+					if( !ReturningLastFrame_ )
+					{
+						ReturningLastFrame_ = BcTrue;
+						Unit_->playSound( 2, "returning" );
+					}
 
 					auto MothershipPosition = TargetMothership_->RigidBody_->getPosition();
 
@@ -441,10 +468,15 @@ void GaMinerComponent::update( BcF32 Tick )
 				}
 				else
 				{
+					ReturningLastFrame_ = BcFalse;
 					// TODO: notify.
 					setTarget( nullptr );
 					State_ = State::IDLE;
 				}
+			}
+			else
+			{
+				ReturningLastFrame_ = BcFalse;
 			}
 		}
 
@@ -550,6 +582,8 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 								AsteroidRigidBody->applyCentralImpulse( Displacement.normal() * ( Event.BodyA_->getMass() + AmountMined_ * 10.0f ) );
 
 								GaCameraComponent::addShake( 0.3f );
+
+								Unit_->playSound( 0, "impact" );
 
 								// Debris.
 								BcF32 Damage = 15.0f;
@@ -717,6 +751,8 @@ void GaMinerComponent::setTarget( class GaUnitComponent* Target )
 	}
 	else
 	{
+		Unit_->stopSound( 1 );
+		Unit_->stopSound( 2 );
 		Target_ = nullptr;
 		TargetAsteroid_ = nullptr;
 		TargetMothership_ = nullptr;

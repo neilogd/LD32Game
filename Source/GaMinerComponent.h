@@ -39,6 +39,10 @@ private:
 	BcF32 MaxExtents_;
 	BcF32 MiningSizeThreshold_;
 
+	BcBool ReturningLastFrame_;
+	BcBool MiningLastFrame_;
+	BcBool ThrustingLastFrame_;
+
 	MaQuat TargetRotation_;
 
 	enum class State
