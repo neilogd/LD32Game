@@ -32,11 +32,13 @@ GaSceneComponent::~GaSceneComponent()
 //virtual
 void GaSceneComponent::update( BcF32 Tick )
 {
+#if 0
 	ScnDebugRenderComponent::pImpl()->drawGrid( 
 		MaVec3d( 0.0f, 0.0f, 0.0f ),
 		MaVec3d( 500.0f, 0.0f, 500.0f ),
 		1.0f,
 		10.0f,
 		0 );
+#endif
 	Super::update( Tick );
 }

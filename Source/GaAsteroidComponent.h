@@ -27,4 +27,10 @@ private:
 	BcF32 MassSizeRatio_;
 	BcF32 Size_;
 	BcF32 OldSize_;
+
+public:
+	class GaUnitComponent* Unit_;
+	class ScnPhysicsCollisionComponent* Collision_;
+	class ScnPhysicsRigidBodyComponent* RigidBody_;
+	class ScnModelComponent* Model_;
 };

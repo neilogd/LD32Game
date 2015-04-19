@@ -64,6 +64,7 @@ GaAsteroidFieldComponent::~GaAsteroidFieldComponent()
 // update
 void GaAsteroidFieldComponent::update( BcF32 Tick )
 {
+#if 0
 	ScnDebugRenderComponent::pImpl()->drawLine( 
 		MaVec3d( -Width_, 0.0f, -MaxExtents_ ),
 		MaVec3d(  Width_, 0.0f, -MaxExtents_ ),
@@ -95,13 +96,12 @@ void GaAsteroidFieldComponent::update( BcF32 Tick )
 		MaVec3d(  Width_, 0.0f,  ( MaxExtents_ + Margin_ ) ),
 		RsColour::RED,
 		0 );
-
+#endif 
 	// Check if we need to move any to other top/bottom side,
 	// or constrain them to the width.
 	for( auto Asteroid : Asteroids_ )
 	{
-		auto AsteroidComponent = Asteroid->getComponentByType< GaAsteroidComponent >();
-		auto RigidBody = Asteroid->getComponentByType< ScnPhysicsRigidBodyComponent >();
+		auto RigidBody = Asteroid->RigidBody_;
 		auto Position = RigidBody->getPosition();
 
 		if( Position.z() < -( MaxExtents_ + Margin_ ) ||
@@ -109,11 +109,11 @@ void GaAsteroidFieldComponent::update( BcF32 Tick )
 			Position.x() < -( MaxExtents_ + Margin_ ) ||
 			Position.x() > ( MaxExtents_ + Margin_ ) )
 		{
-			recycle( AsteroidComponent );
+			recycle( Asteroid );
 		}
-		else if( AsteroidComponent->getSize() < 0.1f )
+		else if( Asteroid->getSize() < 0.1f )
 		{
-			recycle( AsteroidComponent );
+			recycle( Asteroid );
 		}
 
 		if( Position.y() < -Depth_ )
@@ -164,9 +164,11 @@ void GaAsteroidFieldComponent::onAttach( ScnEntityWeakRef Parent )
 				Transform,
 				getParentEntity() )	);
 		BcAssert( Entity != nullptr );
-		Asteroids_.push_back( Entity );
 
-		recycle( Entity->getComponentByType< GaAsteroidComponent >(), BcFalse );
+		auto AsteroidComponent = Entity->getComponentByType< GaAsteroidComponent >();
+		Asteroids_.push_back( AsteroidComponent );
+
+		recycle( AsteroidComponent, BcFalse );
 	}
 
 	Super::onAttach( Parent );

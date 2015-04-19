@@ -53,7 +53,12 @@ GaMinerComponent::GaMinerComponent():
 	CirclingTimer_( 0.0f ),
 	TargetPosition_( 0.0f, 0.0f, 0.0f ),
 	Target_( nullptr ),
-	AmountMined_( 0.0f )
+	TargetAsteroid_( nullptr ),
+	TargetMothership_( nullptr ),
+	TargetRigidBody_( nullptr ),
+	AmountMined_( 0.0f ),
+	Unit_( nullptr ),
+	RigidBody_( nullptr )
 {
 
 }
@@ -70,11 +75,9 @@ GaMinerComponent::~GaMinerComponent()
 // update
 void GaMinerComponent::update( BcF32 Tick )
 {
-	auto Unit = getComponentByType< GaUnitComponent >();
-	BcAssert( Unit );
-	auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
-	auto Position = RigidBody->getPosition();
+	auto Position = RigidBody_->getPosition();
 
+#if 0
 	ScnDebugRenderComponent::pImpl()->drawLine( 
 		MaVec3d( -100.0f, 0.0f, -MaxExtents_ ),
 		MaVec3d(  100.0f, 0.0f, -MaxExtents_ ),
@@ -86,12 +89,11 @@ void GaMinerComponent::update( BcF32 Tick )
 		MaVec3d(  100.0f, 0.0f, MaxExtents_ ),
 		RsColour::YELLOW,
 		0 );
+#endif
 
-	ScnPhysicsRigidBodyComponent* TargetRigidBody = nullptr;
 	if( Target_ != nullptr )
 	{
-		TargetRigidBody = Target_->getComponentByType< ScnPhysicsRigidBodyComponent >();
-		auto TargetRigidBodyPosition = TargetRigidBody->getPosition();
+		auto TargetRigidBodyPosition = TargetRigidBody_->getPosition();
 
 		RsColour Colour = GaUnitComponent::RADAR_COLOUR;
 		if( State_ == State::ACCIDENTING )
@@ -109,14 +111,14 @@ void GaMinerComponent::update( BcF32 Tick )
 	
 	{	
 		// Stabilise ship rotation.
-		auto RigidBodyRotation = RigidBody->getRotation();
+		auto RigidBodyRotation = RigidBody_->getRotation();
 		RigidBodyRotation.inverse();
 		MaQuat RotationDisplacement = TargetRotation_ * RigidBodyRotation;
 		auto EularRotationDisplacement = RotationDisplacement.asEuler();
-		RigidBody->applyTorque( EularRotationDisplacement * RigidBody->getMass() * 100.0f );
+		RigidBody_->applyTorque( EularRotationDisplacement * RigidBody_->getMass() * 100.0f );
 
 		// Dampen.
-		RigidBody->setAngularVelocity( RigidBody->getAngularVelocity() * 0.3f );
+		RigidBody_->setAngularVelocity( RigidBody_->getAngularVelocity() * 0.3f );
 	}
 
 	switch( State_ )
@@ -129,32 +131,32 @@ void GaMinerComponent::update( BcF32 Tick )
 
 	case State::MINING:
 		{
-			BcAssert( TargetRigidBody );
-			TargetPosition_ = TargetRigidBody->getPosition() + MaVec3d( BcCos( CirclingTimer_ ), 1.0f, BcSin( CirclingTimer_ ) ).normal() * MiningDistance_;
+			BcAssert( TargetRigidBody_ );
+			TargetPosition_ = TargetRigidBody_->getPosition() + MaVec3d( BcCos( CirclingTimer_ ), 1.0f, BcSin( CirclingTimer_ ) ).normal() * MiningDistance_;
 		}
 		break;
 
 	case State::ACCIDENTING:
 		{
-			BcAssert( TargetRigidBody );
-			TargetPosition_ = TargetRigidBody->getPosition();
+			BcAssert( TargetRigidBody_ );
+			TargetPosition_ = TargetRigidBody_->getPosition();
 		}
 		break;
 
 	case State::RETURNING:
 		{
-			BcAssert( TargetRigidBody );
-			TargetPosition_ = TargetRigidBody->getPosition() + MaVec3d( 0.0f, MiningDistance_, 0.0f );
+			BcAssert( TargetRigidBody_ );
+			TargetPosition_ = TargetRigidBody_->getPosition() + MaVec3d( 0.0f, MiningDistance_, 0.0f );
 		}
 		break;
 	}
 
 	// Out of bounds.
-	BcF32 ZMax = MaxExtents_ - 2.0f;
-	if( TargetPosition_.z() < -ZMax || TargetPosition_.z() > ZMax )
+	BcF32 ZMax = MaxExtents_;
+	if( TargetPosition_.z() < -ZMax || TargetPosition_.z() > ( ZMax - 2.0f ) )
 	{
 		// TODO: notify.
-		Target_ = nullptr;
+		setTarget( nullptr );
 		State_ = State::IDLE;
 
 		if( TargetPosition_.z() < -ZMax )
@@ -171,7 +173,7 @@ void GaMinerComponent::update( BcF32 Tick )
 	if( TargetPosition_.x() < -XMax || TargetPosition_.x() > XMax )
 	{
 		// TODO: notify.
-		Target_ = nullptr;
+		setTarget( nullptr );
 		State_ = State::IDLE;
 
 		if( TargetPosition_.x() < -XMax )
@@ -190,22 +192,23 @@ void GaMinerComponent::update( BcF32 Tick )
 	auto DisplacementMag = Displacement.magnitude();
 	if( DisplacementMag > 2.0f )
 	{
-		auto ForceAmount = Displacement.normal() * MaxForce_ * RigidBody->getMass();
-		RigidBody->applyCentralForce( ForceAmount );
+		auto ForceAmount = Displacement.normal() * MaxForce_ * RigidBody_->getMass();
+		RigidBody_->applyCentralForce( ForceAmount );
 		
 		MaMat4d LookAt;
 		LookAt.lookAt( MaVec3d( 0.0f, 0.0f, 0.0f ), ForceAmount + MaVec3d( 0.0f, 0.0f, 0.00000001f ), MaVec3d( 0.0f, 1.0f, 0.0f ) );
-		LookAt.inverse();
+		LookAt.transpose();
 		TargetRotation_.fromMatrix4d( LookAt );
 
 		// Thruster.
+#if 1
 		ScnParticle* Particle = nullptr;
 		if( ParticlesAdd_->allocParticle( Particle ) )
 		{
 			MaMat4d WorldMat = getParentEntity()->getWorldMatrix();
 			MaVec4d Backwards = MaVec4d( 0.0f, 0.0f, 1.0f, 0.0f ) * WorldMat;
 
-			RsColour TeamColour = Unit->getTeamColour();
+			RsColour TeamColour = Unit_->getTeamColour();
 			TeamColour.a( 0.75f );
 			Particle->Position_ = ( getParentEntity()->getWorldPosition() - Backwards.xyz() ) * 2.0f;
 			Particle->Velocity_ = -ForceAmount.normal() * 0.01f;
@@ -223,13 +226,14 @@ void GaMinerComponent::update( BcF32 Tick )
 			Particle->MaxTime_ = 0.5f;
 			Particle->Alive_ = BcTrue;
 		}
+#endif
 	}
 	else
 	{
 		// Velocity direction.
 		MaMat4d LookAt;
-		LookAt.lookAt( MaVec3d( 0.0f, 0.0f, 0.0f ), RigidBody->getLinearVelocity() + MaVec3d( 0.0f, 0.0f, 0.00000001f ), MaVec3d( 0.0f, 1.0f, 0.0f ) );
-		LookAt.inverse();
+		LookAt.lookAt( MaVec3d( 0.0f, 0.0f, 0.0f ), RigidBody_->getLinearVelocity() + MaVec3d( 0.0f, 0.0f, 0.00000001f ), MaVec3d( 0.0f, 1.0f, 0.0f ) );
+		LookAt.transpose();
 		TargetRotation_.fromMatrix4d( LookAt );
 	}
 
@@ -246,21 +250,20 @@ void GaMinerComponent::update( BcF32 Tick )
 					RsColour::ORANGE,
 					0 );
 
-				auto Asteroid = Target_->getComponentByType< GaAsteroidComponent >();
-				BcAssert( Asteroid );
+				BcAssert( TargetAsteroid_ );
 
 				if( AmountMined_ < MaxCapacity_ )
 				{
-					auto Size = Asteroid->getSize();
+					auto Size = TargetAsteroid_->getSize();
 					auto AmountMined = Tick * MiningRate_;
 					Size -= AmountMined;
 					AmountMined_ += AmountMined;
-					Asteroid->setSize( Size );
+					TargetAsteroid_->setSize( Size );
 
 					// Return when asteroid is deaded, or TODO we are full.
 					if( Size < MiningSizeThreshold_ )
 					{
-						Target_ = nullptr;
+						setTarget( nullptr );
 						State_ = State::IDLE;
 
 						// TODO: Notify done.
@@ -268,7 +271,7 @@ void GaMinerComponent::update( BcF32 Tick )
 				}
 				else
 				{
-					Target_ = nullptr;
+					setTarget( nullptr );
 					State_ = State::IDLE;
 
 					// TODO: notify Returning.
@@ -279,25 +282,24 @@ void GaMinerComponent::update( BcF32 Tick )
 		{
 			if( DisplacementMag < ( MiningDistance_ * 1.1f ) )
 			{
-				auto Mothership = Target_->getComponentByType< GaMothershipComponent >();
-				BcAssert( Mothership );
+				BcAssert( TargetMothership_ );
 
 				if( AmountMined_ > 0.0f )
 				{
 					auto AmountMined = std::min( AmountMined_, Tick * MiningRate_ );
-					Mothership->addResources( AmountMined * 100.0f );
+					TargetMothership_->addResources( AmountMined * 100.0f );
 					AmountMined_ -= AmountMined;
 				}
 				else
 				{
 					// TODO: notify.
-					Target_ = nullptr;
+					setTarget( nullptr );
 					State_ = State::IDLE;
 				}
 			}
 		}
 
-		if( RigidBody->getLinearVelocity().magnitude() > MaxVelocity_ )
+		if( RigidBody_->getLinearVelocity().magnitude() > MaxVelocity_ )
 		{
 			Damping += 0.01f;
 		}
@@ -305,11 +307,11 @@ void GaMinerComponent::update( BcF32 Tick )
 	}
 	else
 	{
-		RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * 0.1f );
+		RigidBody_->setLinearVelocity( RigidBody_->getLinearVelocity() * 0.1f );
 	}
 
 	Damping = 1.0f - BcClamp( Damping, 0.0f, 1.0f ) * 0.05f;
-	RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * Damping );
+	RigidBody_->setLinearVelocity( RigidBody_->getLinearVelocity() * Damping );
 
 	CirclingTimer_ += Tick;
 	if( CirclingTimer_ > BcPIMUL2 )
@@ -322,16 +324,19 @@ void GaMinerComponent::update( BcF32 Tick )
 // onAttach
 void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 {
+	Unit_ = getComponentByType< GaUnitComponent >();
+	RigidBody_ = getComponentByType< ScnPhysicsRigidBodyComponent >();
+
 	// Mine.
 	Parent->subscribe( 0, this,
 		[ this ]( EvtID, const EvtBaseEvent& BaseEvent )
 		{
 			const auto& Event = BaseEvent.get< GaUnitActionEvent >();
 
-			PSY_LOG( "GaMinerComponent: Mine event" );
+			//PSY_LOG( "GaMinerComponent: Mine event" );
 			State_ = State::MINING;
 
-			Target_ = Event.TargetUnit_;
+			setTarget( Event.TargetUnit_ );
 
 			return evtRET_PASS;
 		} );
@@ -342,10 +347,10 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 		{
 			const auto& Event = BaseEvent.get< GaUnitActionEvent >();
 
-			PSY_LOG( "GaMinerComponent: Accident event" );
+			//PSY_LOG( "GaMinerComponent: Accident event" );
 			State_ = State::ACCIDENTING;
 
-			Target_ = Event.TargetUnit_;
+			setTarget( Event.TargetUnit_ );
 
 			return evtRET_PASS;
 		} );
@@ -356,10 +361,10 @@ void GaMinerComponent::onAttach( ScnEntityWeakRef Parent )
 		{
 			const auto& Event = BaseEvent.get< GaUnitActionEvent >();
 
-			PSY_LOG( "GaMinerComponent: Return event" );
+			//PSY_LOG( "GaMinerComponent: Return event" );
 			State_ = State::RETURNING;
 
-			Target_ = Event.TargetUnit_;
+			setTarget( Event.TargetUnit_ );
 
 			return evtRET_PASS;
 		} );
@@ -436,7 +441,30 @@ void GaMinerComponent::onObjectDeleted( class ReObject* Object )
 	if( Object == Target_ )
 	{
 		// TODO: notify.
-		Target_ = nullptr;
+		setTarget( nullptr );
 		State_ = State::IDLE;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// setTarget
+void GaMinerComponent::setTarget( class GaUnitComponent* Target )
+{
+	if( Target != nullptr )
+	{
+		if( Target_ != Target )
+		{
+			TargetAsteroid_ = Target->getComponentByType< GaAsteroidComponent >();
+			TargetMothership_ = Target->getComponentByType< GaMothershipComponent >();
+			TargetRigidBody_ = Target->getComponentByType< ScnPhysicsRigidBodyComponent >();
+		}
+		Target_ = Target;
+	}
+	else
+	{
+		Target_ = nullptr;
+		TargetAsteroid_ = nullptr;
+		TargetMothership_ = nullptr;
+		TargetRigidBody_ = nullptr;
 	}
 }

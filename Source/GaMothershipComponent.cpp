@@ -53,7 +53,9 @@ GaMothershipComponent::GaMothershipComponent():
 	MineWeight_( 0.0f ),
 	BuildWeight_( 0.0f ),
 	RepairWeight_( 0.0f ),
-	ReturnWeight_( 0.0f )
+	ReturnWeight_( 0.0f ),
+	Unit_( nullptr ),
+	RigidBody_( nullptr )
 {
 
 }
@@ -70,33 +72,30 @@ GaMothershipComponent::~GaMothershipComponent()
 // update
 void GaMothershipComponent::update( BcF32 Tick )
 {
-	auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
-	auto Unit = getComponentByType< GaUnitComponent >();
-
 	// Stabilise ship position.
-	auto RigidBodyPosition = RigidBody->getPosition();
+	auto RigidBodyPosition = RigidBody_->getPosition();
 	auto Displacement = TargetPosition_ - RigidBodyPosition;
-	RigidBody->applyCentralForce( Displacement * RigidBody->getMass() );
+	RigidBody_->applyCentralForce( Displacement * RigidBody_->getMass() );
 
 	// Stabilise ship rotation.
-	auto RigidBodyRotation = RigidBody->getRotation();
+	auto RigidBodyRotation = RigidBody_->getRotation();
 	RigidBodyRotation.inverse();
 	MaQuat RotationDisplacement = TargetRotation_ * RigidBodyRotation;
 	auto EularRotationDisplacement = RotationDisplacement.asEuler();
-	RigidBody->applyTorque( EularRotationDisplacement * RigidBody->getMass() * 10.0f );
+	RigidBody_->applyTorque( EularRotationDisplacement * RigidBody_->getMass() * 10.0f );
 
 	// Dampen.
-	RigidBody->setLinearVelocity( RigidBody->getLinearVelocity() * 0.99f );
-	RigidBody->setAngularVelocity( RigidBody->getAngularVelocity() * 0.99f );
+	RigidBody_->setLinearVelocity( RigidBody_->getLinearVelocity() * 0.99f );
+	RigidBody_->setAngularVelocity( RigidBody_->getAngularVelocity() * 0.99f );
 
 	// Random impulse just to make it look a bit more funky.
 	if( BcRandom::Global.randRealRange( 0.0f, 100.0f ) < 1.0f )
 	{
-		RigidBody->applyImpulse( 
+		RigidBody_->applyImpulse( 
 			MaVec3d( 
 				BcRandom::Global.randRealRange( -1.0f, 1.0f ),
 				BcRandom::Global.randRealRange( -1.0f, 1.0f ),
-				BcRandom::Global.randRealRange( -1.0f, 1.0f ) ) * RigidBody->getMass() * 0.1f,
+				BcRandom::Global.randRealRange( -1.0f, 1.0f ) ) * RigidBody_->getMass() * 0.1f,
 			MaVec3d( 
 				BcRandom::Global.randRealRange( -1.0f, 1.0f ),
 				BcRandom::Global.randRealRange( -1.0f, 1.0f ),
@@ -104,111 +103,116 @@ void GaMothershipComponent::update( BcF32 Tick )
 	}
 
 	// AI player :)
-	if( Unit->getTeam() == 2 )
+	if( Unit_->getTeam() == 2 )
 	{
-		AttackWeight_ = std::max( AttackWeight_, 0.0f );
-		MineWeight_ = std::max( MineWeight_, 0.0f );
-		BuildWeight_ = std::max( BuildWeight_, 0.0f );
-		RepairWeight_ = std::max( RepairWeight_, 0.0f );
-		ReturnWeight_ = std::max( RepairWeight_, 0.0f );
-
-		// Build miners.
+		static int ShouldTick = 0;
+		if( ++ShouldTick > 0 )
 		{
-			for( BcU32 Idx = 1; Idx < 8; ++Idx )
+			ShouldTick = 0;
+			AttackWeight_ = std::max( AttackWeight_, 0.0f );
+			MineWeight_ = std::max( MineWeight_, 0.0f );
+			BuildWeight_ = std::max( BuildWeight_, 0.0f );
+			RepairWeight_ = std::max( RepairWeight_, 0.0f );
+			ReturnWeight_ = std::max( RepairWeight_, 0.0f );
+
+			// Build miners.
 			{
-				if( TotalResources_ >= ( 100.0f * BcF32( Idx ) ) && Miners_.size() < ( 2 * Idx ) )
+				for( BcU32 Idx = 1; Idx < 8; ++Idx )
 				{
-					GaUnitActionEvent Event;
-					Event.SourceUnit_ = Unit;
-					Event.TargetUnit_ = Unit;
-					getParentEntity()->publish( 0, Event );
-					MineWeight_ += Tick;
-					break;
-				}
-			}
-		}
-
-		// Control miners.
-		BcU32 CurrMiner = 0;
-		for( auto Miner : Miners_ )
-		{
-			// Use half of our miners for defence if we have enough money to replace 2 of em.
-			if( CurrMiner < Miners_.size() / 2  || TotalResources_ <= 100.0f )
-			{
-				// Send to mine if idle.
-				if( Miner->isIdle() && !Miner->isFull( 1.0f ) )
-				{
-					auto Asteroid = findAsteroid( 
-						[ Miner ]( GaAsteroidComponent* Asteroid )
-						{
-							auto Distance = ( Miner->getPosition() - Asteroid->getPosition() ).magnitude();
-							auto Z = Asteroid->getPosition().z();
-							if( Z < -24.0f || Z > 24.0f )
-							{
-								Z += 1e12f;
-							}
-
-							return -Distance - Z;
-						} );
-
-					if( Asteroid != nullptr )
+					if( TotalResources_ >= ( 100.0f * BcF32( Idx ) ) && Miners_.size() < ( 2 * Idx ) )
 					{
-						auto Z = Asteroid->getPosition().z();
-						if( Z > -24.0f && Z < 24.0f )
-						{
-							GaUnitActionEvent Event;
-							Event.SourceUnit_ = Miner->getComponentByType< GaUnitComponent >();
-							Event.TargetUnit_ = Asteroid->getComponentByType< GaUnitComponent >();
-							Miner->getParentEntity()->publish( 0, Event );
-							ReturnWeight_ += Tick;
-						}
-					}
-				}
-				// Get returning if almost full.
-				else if( Miner->isIdle() && Miner->isFull( 1.0f ) )
-				{
-					GaUnitActionEvent Event;
-					Event.SourceUnit_ = Miner->getComponentByType< GaUnitComponent >();
-					Event.TargetUnit_ = Unit;
-					Miner->getParentEntity()->publish( 2, Event );
-					ReturnWeight_ += Tick;
-				}
-			}
-			else
-			{
-				// If we have an idle miner and enough to replace it.
-				if( Miner->isIdle() )
-				{
-					// Crash into nearest asteroid.
-					auto Asteroid = findAsteroid( 
-						[ this ]( GaAsteroidComponent* Asteroid )
-						{
-							auto Distance = ( Enemy_->getComponentByType< ScnPhysicsRigidBodyComponent >()->getPosition() - Asteroid->getPosition() ).magnitude();
-							auto Z = Asteroid->getPosition().z();
-							if( Z < -24.0f || Z > 24.0f )
-							{
-								Z += 1e12f;
-							}
-
-							return -Distance - Z;
-						} );
-
-					if( Asteroid != nullptr )
-					{
-						auto Z = Asteroid->getPosition().z();
-						if( Z > -24.0f && Z < 24.0f )
-						{
-							GaUnitActionEvent Event;
-							Event.SourceUnit_ = Miner->getComponentByType< GaUnitComponent >();
-							Event.TargetUnit_ = Asteroid->getComponentByType< GaUnitComponent >();
-							Miner->getParentEntity()->publish( 1, Event );
-							ReturnWeight_ += Tick;
-						}
+						GaUnitActionEvent Event;
+						Event.SourceUnit_ = Unit_;
+						Event.TargetUnit_ = Unit_;
+						getParentEntity()->publish( 0, Event );
+						MineWeight_ += Tick;
+						break;
 					}
 				}
 			}
 
-			++CurrMiner;
+			// Control miners.
+			BcU32 CurrMiner = 0;
+			for( auto Miner : Miners_ )
+			{
+				// Use half of our miners for defence if we have enough money to replace 2 of em.
+				if( CurrMiner < Miners_.size() / 2  || TotalResources_ <= 100.0f )
+				{
+					// Send to mine if idle.
+					if( Miner->isIdle() && !Miner->isFull( 1.0f ) )
+					{
+						auto Asteroid = findAsteroid( 
+							[ Miner ]( GaAsteroidComponent* Asteroid )
+							{
+								auto Distance = ( Miner->getPosition() - Asteroid->getPosition() ).magnitude();
+								auto Z = Asteroid->getPosition().z();
+								if( Z < -24.0f || Z > 24.0f )
+								{
+									Z += 1e12f;
+								}
+
+								return -Distance - Z;
+							} );
+
+						if( Asteroid != nullptr )
+						{
+							auto Z = Asteroid->getPosition().z();
+							if( Z > -24.0f && Z < 24.0f )
+							{
+								GaUnitActionEvent Event;
+								Event.SourceUnit_ = Miner->Unit_;
+								Event.TargetUnit_ = Asteroid->Unit_;
+								Miner->getParentEntity()->publish( 0, Event );
+								ReturnWeight_ += Tick;
+							}
+						}
+					}
+					// Get returning if almost full.
+					else if( Miner->isIdle() && Miner->isFull( 1.0f ) )
+					{
+						GaUnitActionEvent Event;
+						Event.SourceUnit_ = Miner->Unit_;
+						Event.TargetUnit_ = Unit_;
+						Miner->getParentEntity()->publish( 2, Event );
+						ReturnWeight_ += Tick;
+					}
+				}
+				else
+				{
+					// If we have an idle miner and enough to replace it.
+					if( Miner->isIdle() )
+					{
+						// Crash into nearest asteroid.
+						auto Asteroid = findAsteroid( 
+							[ this ]( GaAsteroidComponent* Asteroid )
+							{
+								auto Distance = ( Enemy_->RigidBody_->getPosition() - Asteroid->getPosition() ).magnitude();
+								auto Z = Asteroid->getPosition().z();
+								if( Z < -24.0f || Z > 24.0f )
+								{
+									Z += 1e12f;
+								}
+
+								return -Distance - Z;
+							} );
+
+						if( Asteroid != nullptr )
+						{
+							auto Z = Asteroid->getPosition().z();
+							if( Z > -24.0f && Z < 24.0f )
+							{
+								GaUnitActionEvent Event;
+								Event.SourceUnit_ = Miner->Unit_;
+								Event.TargetUnit_ = Asteroid->Unit_;
+								Miner->getParentEntity()->publish( 1, Event );
+								ReturnWeight_ += Tick;
+							}
+						}
+					}
+				}
+
+				++CurrMiner;
+			}
 		}
 	}
 
@@ -235,6 +239,9 @@ void GaMothershipComponent::update( BcF32 Tick )
 // update
 void GaMothershipComponent::onAttach( ScnEntityWeakRef Parent )
 {
+	Unit_ = getComponentByType< GaUnitComponent >();
+	RigidBody_ = getComponentByType< ScnPhysicsRigidBodyComponent >();
+
 	// Build
 	Parent->subscribe( 0, this,
 		[ this ]( EvtID, const EvtBaseEvent& BaseEvent )

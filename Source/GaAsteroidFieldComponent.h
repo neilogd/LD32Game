@@ -21,6 +21,7 @@ public:
 
 private:
 	std::vector< ScnEntity* > AsteroidTemplates_;
+
 	BcU32 NoofAsteroids_;
 	BcF32 MinVelocity_;
 	BcF32 MaxVelocity_;
@@ -31,6 +32,6 @@ private:
 	BcF32 Depth_;
 	BcF32 Margin_;
 
-	std::vector< ScnEntity* > Asteroids_;
+	std::vector< GaAsteroidComponent* > Asteroids_;
 };
 

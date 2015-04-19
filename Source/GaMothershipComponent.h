@@ -49,4 +49,8 @@ private:
 	BcF32 BuildWeight_;
 	BcF32 RepairWeight_;
 	BcF32 ReturnWeight_;
+
+public:
+	class GaUnitComponent* Unit_;
+	class ScnPhysicsRigidBodyComponent* RigidBody_;
 };

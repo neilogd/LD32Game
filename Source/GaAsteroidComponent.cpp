@@ -1,5 +1,6 @@
 #include "GaAsteroidComponent.h"
 #include "GaAsteroidFieldComponent.h"
+#include "GaUnitComponent.h"
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Rendering/ScnModel.h"
@@ -30,7 +31,11 @@ void GaAsteroidComponent::StaticRegisterClass()
 GaAsteroidComponent::GaAsteroidComponent():
 	MassSizeRatio_( 1.0f ),
 	Size_( 1.0f ),
-	OldSize_( 0.0f )
+	OldSize_( 0.0f ),
+	Unit_( nullptr ),
+	Collision_( nullptr ),
+	RigidBody_( nullptr ),
+	Model_( nullptr )
 {
 
 }
@@ -51,17 +56,11 @@ void GaAsteroidComponent::update( BcF32 Tick )
 	{
 		if( Size_ != OldSize_ )
 		{
-			auto Collision = getComponentByType< ScnPhysicsCollisionComponent >();
-			auto RigidBody = getComponentByType< ScnPhysicsRigidBodyComponent >();
-			BcAssert( Collision );
-			BcAssert( RigidBody );
-			Collision->setLocalScaling( MaVec3d( Size_, Size_, Size_ ) );
-			RigidBody->setMass( Size_ * MassSizeRatio_ );
-
-			auto Model = getComponentByType< ScnModelComponent >();
-			if( Model )
+			Collision_->setLocalScaling( MaVec3d( Size_, Size_, Size_ ) );
+			RigidBody_->setMass( Size_ * MassSizeRatio_ );
+			if( Model_ )
 			{
-				Model->setBaseTransform( MaVec3d( 0.0f, 0.0f, 0.0f ), MaVec3d( Size_, Size_, Size_ ), MaVec3d( 0.0f, 0.0f, 0.0f ) );
+				Model_->setBaseTransform( MaVec3d( 0.0f, 0.0f, 0.0f ), MaVec3d( Size_, Size_, Size_ ), MaVec3d( 0.0f, 0.0f, 0.0f ) );
 			}
 
 			OldSize_ = Size_;
@@ -82,6 +81,10 @@ void GaAsteroidComponent::onAttach( ScnEntityWeakRef Parent )
 			return evtRET_PASS;
 		} );
 
+	Unit_ = getComponentByType< GaUnitComponent >();
+	Collision_ = getComponentByType< ScnPhysicsCollisionComponent >();
+	RigidBody_ = getComponentByType< ScnPhysicsRigidBodyComponent >();
+	Model_ = getComponentByType< ScnModelComponent >();
 	Super::onAttach( Parent );
 }
 

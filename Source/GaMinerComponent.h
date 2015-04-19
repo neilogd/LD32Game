@@ -53,11 +53,21 @@ private:
 
 	BcF32 CirclingTimer_;
 	MaVec3d TargetPosition_;
+
+	void setTarget( class GaUnitComponent* Target );
+
 	class GaUnitComponent* Target_;
+	class GaAsteroidComponent* TargetAsteroid_;
+	class GaMothershipComponent* TargetMothership_;
+	class ScnPhysicsRigidBodyComponent* TargetRigidBody_;
 
 	BcF32 AmountMined_;
 
 	class ScnParticleSystemComponent* ParticlesAdd_;
 	class ScnParticleSystemComponent* ParticlesSub_;
 	struct ScnParticle* ShadowParticle_;;
+
+public:
+	class GaUnitComponent* Unit_;
+	class ScnPhysicsRigidBodyComponent* RigidBody_;
 };
