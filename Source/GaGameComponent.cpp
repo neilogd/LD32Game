@@ -1,9 +1,12 @@
 #include "GaGameComponent.h"
 #include "GaUnitComponent.h"
 
+#include "System/Content/CsPackage.h"
+
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Rendering/ScnViewComponent.h"
 #include "System/Scene/Rendering/ScnCanvasComponent.h"
+#include "System/Scene/Rendering/ScnMaterial.h"
 #include "System/Scene/Physics/ScnPhysicsWorldComponent.h"
 #include "System/Scene/Physics/ScnPhysicsCollisionComponent.h"
 
@@ -19,11 +22,11 @@ void GaGameComponent::StaticRegisterClass()
 	ReField* Fields[] = 
 	{
 		new ReField( "MothershipEntity_", &GaGameComponent::MothershipEntity_, bcRFF_SHALLOW_COPY | bcRFF_IMPORTER ),
-		new ReField( "UIMaterial_", &GaGameComponent::MothershipEntity_, bcRFF_SHALLOW_COPY | bcRFF_IMPORTER ),
+		new ReField( "UIMaterial_", &GaGameComponent::UIMaterial_, bcRFF_SHALLOW_COPY | bcRFF_IMPORTER ),
 
-		new ReField( "UIMaterialComponent_", &GaGameComponent::MothershipEntity_, bcRFF_TRANSIENT ),
+		new ReField( "UIMaterialComponent_", &GaGameComponent::UIMaterialComponent_, bcRFF_TRANSIENT ),
 		new ReField( "View_", &GaGameComponent::View_, bcRFF_TRANSIENT ),
-		new ReField( "World_", &GaGameComponent::View_, bcRFF_TRANSIENT ),
+		new ReField( "World_", &GaGameComponent::World_, bcRFF_TRANSIENT ),
 		new ReField( "SelectedUnit_", &GaGameComponent::SelectedUnit_, bcRFF_TRANSIENT ),
 		new ReField( "MouseEvents_", &GaGameComponent::MouseEvents_, bcRFF_TRANSIENT ),
 	};
@@ -36,6 +39,8 @@ void GaGameComponent::StaticRegisterClass()
 // Ctor
 GaGameComponent::GaGameComponent():
 	MothershipEntity_( nullptr ),
+	UIMaterial_( nullptr ),
+	UIMaterialComponent_( nullptr ),
 	View_( nullptr ),
 	World_( nullptr ),
 	SelectedUnit_( nullptr ),
@@ -57,109 +62,110 @@ GaGameComponent::~GaGameComponent()
 //virtual
 void GaGameComponent::update( BcF32 Tick )
 {
+	// Get projection for UI.
+	OsClient* Client = OsCore::pImpl()->getClient( 0 );
+	BcF32 HalfWidth = static_cast< BcF32 >( Client->getWidth() / 2 );
+	BcF32 HalfHeight = static_cast< BcF32 >( Client->getHeight() / 2 );
+
+	MaMat4d UIProjection;
+	UIProjection.orthoProjection( -HalfWidth, HalfWidth, HalfHeight, -HalfHeight, -1.0f, 1.0f );
+
+	Canvas_->clear();
+	Canvas_->pushMatrix( UIProjection );
+	Canvas_->setMaterialComponent( UIMaterialComponent_ );
+
+	BcAssert( View_ != nullptr );
+	BcAssert( World_ != nullptr );
+	BcF32 IconSize = 64.0f;
+
+	// Check hover.
+	{
+
+		GaUnitComponent* HoverUnit = getUnitAt( MousePosition_ );
+		if( HoverUnit != nullptr )
+		{
+			auto Position = View_->getScreenPosition( HoverUnit->getParentEntity()->getWorldPosition() );
+
+			BcU32 NoofActions = 0;
+			std::array< const struct GaUnitAction*, 3 > Actions;				
+			for( BcU32 MouseButton = 0; MouseButton < Actions.size(); ++MouseButton )
+			{
+				auto Action = getAction( MouseButton, HoverUnit );
+				if( Action )
+				{
+					Actions[ NoofActions++ ] = Action;
+				}
+			}
+
+			MaVec2d Offsets[3] =
+			{
+				MaVec2d( -IconSize, 0.0f ),
+				MaVec2d( IconSize, 0.0f ),
+				MaVec2d( 0.0f, 0.0f )
+			};
+
+			for( BcU32 Idx = 0; Idx < NoofActions; ++Idx )
+			{
+				auto Action = Actions[ Idx ];
+				auto Offset = Offsets[ Action->MouseButton_ ];
+				Canvas_->drawSpriteCentered( Position + Offset - MaVec2d( 0.0f, IconSize ), MaVec2d( IconSize, IconSize ), Action->MouseButton_, RsColour::GREEN, 100 );
+				Canvas_->drawSpriteCentered( Position + Offset, MaVec2d( IconSize, IconSize ), Action->Icon_, RsColour::GREEN, 100 );
+			}
+
+			// Hover selection.
+			if( NoofActions == 0 || SelectedUnit_ == nullptr )
+			{
+				// Selectable? Draw that thing.
+				if( isUnitSelectable( HoverUnit ) )
+				{
+					Canvas_->drawSpriteCentered( Position, MaVec2d( IconSize, IconSize ), (BcU32)GaGameIcon::SELECT, RsColour::GREEN, 100 );
+				}
+			}
+		}
+	}
+
+	if( SelectedUnit_ != nullptr )
+	{
+		auto Position = View_->getScreenPosition( SelectedUnit_->getParentEntity()->getWorldPosition() );
+		Canvas_->drawSpriteCentered( Position, MaVec2d( IconSize, IconSize ), (BcU32)GaGameIcon::SELECT, RsColour::GREEN, 90 );
+	}
+	
+
 	for( const auto& EventPair : MouseEvents_ )
 	{
 		auto ID = EventPair.first;
 		const auto& Event = EventPair.second;
 
-		BcAssert( View_ != nullptr );
-		BcAssert( World_ != nullptr );
-
 		MaVec2d Position( Event.MouseX_, Event.MouseY_ );
-		MaVec3d Near, Far;
-		View_->getWorldPosition( Position, Near, Far );
-
-		GaUnitComponent* ClickedUnit = nullptr;
-
-		ScnPhysicsLineCastResult Result;
-		if( World_->lineCast( Near, Far, &Result ) )
-		{
-			auto Entity = Result.Entity_;
-			auto Unit = Entity->getComponentByType< GaUnitComponent >();
-			if( Unit != nullptr )
-			{
-				ClickedUnit = Unit;
-			}
-		}
-		else
-		{
-			if( SelectedUnit_ ) SelectedUnit_->removeNotifier( this );
-			SelectedUnit_ = nullptr;
-		}
-
+		GaUnitComponent* ClickedUnit = getUnitAt( Position );
 		// If we have clicked on a unit, we may need to determine the action also.
-		if( ClickedUnit != nullptr )
+		if( ClickedUnit != nullptr)
 		{
 			BcBool PerformedAction = BcFalse;
 			if( SelectedUnit_ != nullptr )
 			{
-				// Check for unit actions.
-				EvtID ActionID = BcErrorCode;
-				for( const auto& Action : SelectedUnit_->getActions() )
-				{
-					if( Action.MouseButton_ == Event.ButtonCode_ )
-					{
-						for( auto& Component : ClickedUnit->getParentEntity()->getComponents() )
-						{
-							for( const auto& TargetClass : Action.TargetClasses_ )
-							{
-								if( Component->getClass()->getName() == TargetClass )
-								{
-									ActionID = Action.ActionID_;
-									break;
-								}
-							}
-							if( ActionID != BcErrorCode ) break;
-						}
-					}
-					if( ActionID != BcErrorCode ) break;
-				}
+				auto Action = getAction( Event.ButtonCode_, ClickedUnit );
 
-				if( ActionID != BcErrorCode )
+				if( Action != nullptr )
 				{
 					PSY_LOG( "Sending action." );
 					GaUnitActionEvent Event;
 					Event.SourceUnit_ = SelectedUnit_;
 					Event.TargetUnit_ = ClickedUnit;
-					SelectedUnit_->getParentEntity()->publish( ActionID, Event );
+					SelectedUnit_->getParentEntity()->publish( Action->ActionID_, Event );
 					PerformedAction = BcTrue;
 				}
-			}
-			else
-			{
-#if 0
-				// Check for non-unit actions.
-				// Check for unit actions.
-				EvtID ActionID = BcErrorCode;
-				for( const auto& Action : SelectedUnit_->getActions() )
-				{
-					for( auto& Component : ClickedUnit->getParentEntity()->getComponents() )
-					{
-						if( Action.TargetClasses_.size() == 0 )
-						{
-							ActionID = Action.ActionID_;
-						}
-					}
-					if( ActionID != BcErrorCode ) break;
-				}
-
-				if( ActionID != BcErrorCode )
-				{
-					GaUnitActionEvent Event;
-					Event.SourceUnit_ = SelectedUnit_;
-					Event.TargetUnit_ = nullptr;
-					SelectedUnit_->getParentEntity()->publish( ActionID, Event );
-					PerformedAction = BcTrue;
-				}
-#endif
 			}
 
 			// No action? Reselect.
-			if( PerformedAction == BcFalse )
+			if( isUnitSelectable( ClickedUnit ) )
 			{
-				if( SelectedUnit_ ) SelectedUnit_->removeNotifier( this );
-				SelectedUnit_ = ClickedUnit;
-				if( SelectedUnit_ ) SelectedUnit_->addNotifier( this );
+				if( PerformedAction == BcFalse )
+				{
+					if( SelectedUnit_ ) SelectedUnit_->removeNotifier( this );
+					SelectedUnit_ = ClickedUnit;
+					if( SelectedUnit_ ) SelectedUnit_->addNotifier( this );
+				}
 			}
 		}
 		else
@@ -175,12 +181,22 @@ void GaGameComponent::update( BcF32 Tick )
 	{
 		ScnDebugRenderComponent::pImpl()->drawEllipsoid( SelectedUnit_->getParentEntity()->getWorldPosition(), MaVec3d( 3.0f, 3.0f, 3.0f ), RsColour::RED, 0 );
 	}
+
+	Canvas_->popMatrix();
 }
 
 //////////////////////////////////////////////////////////////////////////
 // update
 void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 {
+	OsCore::pImpl()->subscribe( osEVT_INPUT_MOUSEMOVE, this, 
+		[ this ]( EvtID ID, const EvtBaseEvent& BaseEvent )
+		{	
+			auto Event = BaseEvent.get< OsEventInputMouse >();
+			MousePosition_ = MaVec2d( Event.MouseX_, Event.MouseY_ );
+			return evtRET_PASS;
+		} );
+
 	OsCore::pImpl()->subscribe( osEVT_INPUT_MOUSEDOWN, this, 
 		[ this ]( EvtID ID, const EvtBaseEvent& BaseEvent )
 		{	
@@ -189,7 +205,12 @@ void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 			return evtRET_PASS;
 		} );
 
-
+	ScnShaderPermutationFlags ShaderPermutation = 
+		ScnShaderPermutationFlags::MESH_STATIC_2D |
+		ScnShaderPermutationFlags::RENDER_FORWARD |
+		ScnShaderPermutationFlags::LIGHTING_NONE;
+	BcAssert( UIMaterial_ );
+	UIMaterialComponent_ = Parent->attach< ScnMaterialComponent >( BcName::INVALID, UIMaterial_, ShaderPermutation );
 
 	View_ = getComponentAnyParentByType< ScnViewComponent >();
 	World_ = getComponentAnyParentByType< ScnPhysicsWorldComponent >();
@@ -200,8 +221,8 @@ void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 
 	MaMat4d MothershipTransform0;
 	MaMat4d MothershipTransform1;
-	MothershipTransform0.translation( MaVec3d( -32.0f, 0.0f, 0.0f ) );
-	MothershipTransform1.translation( MaVec3d(  32.0f, 0.0f, 0.0f ) );
+	MothershipTransform0.translation( MaVec3d(  32.0f, 0.0f, 0.0f ) );
+	MothershipTransform1.translation( MaVec3d( -32.0f, 0.0f, 0.0f ) );
 
 	BcAssert( MothershipEntity_ );
 	{
@@ -246,4 +267,68 @@ void GaGameComponent::onObjectDeleted( class ReObject* Object )
 	{
 		SelectedUnit_ = nullptr;
 	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// getUnitAt
+class GaUnitComponent* GaGameComponent::getUnitAt( MaVec2d& MousePosition )
+{
+	MaVec3d Near, Far;
+	View_->getWorldPosition( MousePosition, Near, Far );
+
+	GaUnitComponent* ClickedUnit = nullptr;
+	ScnPhysicsLineCastResult Result;
+	if( World_->lineCast( Near, Far, &Result ) )
+	{
+		auto Entity = Result.Entity_;
+		auto Unit = Entity->getComponentByType< GaUnitComponent >();
+		if( Unit != nullptr )
+		{
+			ClickedUnit = Unit;
+		}
+	}
+	return ClickedUnit;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// isUnitSelectable
+BcBool GaGameComponent::isUnitSelectable( class GaUnitComponent* Unit )
+{
+	if( Unit->getTeam() == 1 )
+	{
+		return BcTrue;	
+	}
+	return BcFalse;	
+}
+
+//////////////////////////////////////////////////////////////////////////
+// getAction
+const struct GaUnitAction* GaGameComponent::getAction( BcU32 MouseButton, GaUnitComponent* TargetUnit )
+{
+	const struct GaUnitAction* RetAction = nullptr;
+	if( SelectedUnit_ != nullptr )
+	{
+		// Check for unit actions.
+		EvtID ActionID = BcErrorCode;
+		for( const auto& Action : SelectedUnit_->getActions() )
+		{
+			if( Action.MouseButton_ == MouseButton )
+			{
+				for( auto& Component : TargetUnit->getParentEntity()->getComponents() )
+				{
+					for( const auto& TargetClass : Action.TargetClasses_ )
+					{
+						if( Component->getClass()->getName() == TargetClass )
+						{
+							RetAction = &Action;
+							break;
+						}
+					}
+					if( RetAction != nullptr ) break;
+				}
+			}
+			if( RetAction != nullptr ) break;
+		}
+	}
+	return RetAction;
 }

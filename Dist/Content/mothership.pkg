@@ -33,6 +33,7 @@
 						{
 							"name" : "Build Miner",
 							"description" : "Build another miner.",
+							"icon" : 3,
 							"cost" : 0,
 							"mousebutton" : 0,
 							"actionid" : 0,
@@ -44,6 +45,7 @@
 						{
 							"name" : "Repair Shield",
 							"description" : "Repair shield.",
+							"icon" : 3,
 							"cost" : 0,
 							"mousebutton" : 1,
 							"actionid" : 1,

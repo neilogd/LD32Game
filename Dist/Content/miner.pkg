@@ -35,6 +35,7 @@
 						{
 							"name" : "Mine",
 							"description" : "Begin mining target asteroid.",
+							"icon" : 3,
 							"actionid" : 0,
 							"mousebutton" : 0,
 							"cost" : 0,
@@ -46,6 +47,7 @@
 						{
 							"name" : "Accident",
 							"description" : "Accidentally make asteroid hit competitor.",
+							"icon" : 3,
 							"actionid" : 1,
 							"mousebutton" : 1,
 							"cost" : 0,
@@ -57,6 +59,7 @@
 						{
 							"name" : "Return",
 							"description" : "Return to mothership.",
+							"icon" : 3,
 							"actionid" : 2,
 							"mousebutton" : 1,
 							"cost" : 0,

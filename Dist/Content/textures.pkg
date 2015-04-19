@@ -5,6 +5,18 @@
 			"name"			: "default",
 
 			"source"		: "EngineContent/TextureSource/default.png"
+		},
+
+		{
+			"type"			: "ScnTextureAtlas",
+			"name"			: "ui",
+
+			"source"		: [
+				"Content/Source/IconLMB.png",
+				"Content/Source/IconRMB.png",
+				"Content/Source/IconSelect.png",
+				"Content/Source/IconDrill.png"
+			]
 		}
 	]
 }

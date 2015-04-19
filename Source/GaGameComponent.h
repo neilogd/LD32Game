@@ -3,6 +3,16 @@
 #include "System/Os/OsEvents.h"
 
 //////////////////////////////////////////////////////////////////////////
+// GaGameIcon
+enum class GaGameIcon : BcU32
+{
+	LMB = 0,
+	RMB,
+	SELECT,
+	DRILL
+};
+
+//////////////////////////////////////////////////////////////////////////
 // GaGameComponent
 class GaGameComponent:
 	public ScnComponent,
@@ -21,6 +31,11 @@ public:
 
 	void onObjectDeleted( class ReObject* Object ) override;
 
+	class GaUnitComponent* getUnitAt( MaVec2d& MousePosition );
+	const struct GaUnitAction* getAction( BcU32 MouseButton, GaUnitComponent* TargetUnit );
+
+	BcBool isUnitSelectable( class GaUnitComponent* Unit );
+
 private:
 	class ScnEntity* MothershipEntity_;
 	class ScnMaterial* UIMaterial_;
@@ -29,6 +44,8 @@ private:
 	class ScnViewComponent* View_;
 	class ScnPhysicsWorldComponent* World_;
 	class ScnCanvasComponent* Canvas_;
+
+	MaVec2d MousePosition_;
 
 	class GaUnitComponent* SelectedUnit_;
 

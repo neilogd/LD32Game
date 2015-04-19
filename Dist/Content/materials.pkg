@@ -51,6 +51,54 @@
 
 		{
 			"type" : "ScnMaterial",
+			"name" : "ui",
+
+			// Shader
+			"shader" : "$(ScnShader:shaders.textured)",
+
+			// Textures
+			"textures" : {
+				"aDiffuseTex" : "$(ScnTexture:textures.ui)"
+			},
+
+			// Samplers
+			"samplers" : {
+				"aDiffuseTex" : {
+					"addressu" : "wrap",
+					"addressv" : "wrap",
+					"minfilter" : "linear_mipmap_linear",
+					"magfilter" : "linear"
+				}
+			},
+
+			// New render state.
+			"renderstate" : {
+				"blendstate" : {
+					"rendertarget" : [
+						{
+							"enable" : false
+						}
+					]
+				},
+
+				"depthstencilstate" : {
+					"depthtestenable" : true,
+					"depthwriteenable" : true,
+					"depthfunc" : "lessequal",
+					"stencilenable" : false
+				},
+
+				"rasteriserstate" : {
+					"fillmode" : "solid",
+					"cullmode" : "none",
+					"depthclipenable" : true,
+					"antialiasedlineenable" : true
+				}
+			}
+		},
+
+		{
+			"type" : "ScnMaterial",
 			"name" : "debugrender",
 
 			// Shader

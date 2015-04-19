@@ -11,6 +11,7 @@ struct GaUnitAction
 
 	std::string Name_;
 	std::string Description_;
+	BcU32 Icon_;
 	BcU32 MouseButton_;
 	EvtID ActionID_;
 	std::vector< BcName > TargetClasses_;

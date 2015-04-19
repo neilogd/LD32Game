@@ -41,7 +41,8 @@
 					"components" : [
 						{
 							"type" : "GaGameComponent",
-							"mothershipentity" : "$(ScnEntity:mothership.MothershipEntity_0)"
+							"mothershipentity" : "$(ScnEntity:mothership.MothershipEntity_0)",
+							"uimaterial" : "$(ScnMaterial:materials.ui)"
 						},
 
 						{
