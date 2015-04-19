@@ -63,6 +63,7 @@ void GaCameraComponent::preUpdate( BcF32 Tick )
 {
 	Super::update( Tick );
 
+#if 1
 	// Update state.
 	switch( CameraState_ )
 	{
@@ -96,6 +97,8 @@ void GaCameraComponent::preUpdate( BcF32 Tick )
 	CameraRotation_ += CameraRotationDelta_ * Tick;
 
 	CameraDistance_ += CameraZoom_ * Tick;
+#endif
+
 	CameraDistance_ = BcClamp( CameraDistance_, 1.0f, 4096.0f );
 	CameraZoom_ = 0.0f;
 

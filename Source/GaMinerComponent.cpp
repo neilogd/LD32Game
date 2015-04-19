@@ -127,7 +127,7 @@ void GaMinerComponent::update( BcF32 Tick )
 	case State::RETURNING:
 		{
 			BcAssert( TargetRigidBody );
-			TargetPosition_ = TargetRigidBody->getPosition() + MaVec3d( 0.0f, 3.0f, 0.0f );
+			TargetPosition_ = TargetRigidBody->getPosition() + MaVec3d( 0.0f, MiningDistance_, 0.0f );
 		}
 		break;
 	}
@@ -196,30 +196,50 @@ void GaMinerComponent::update( BcF32 Tick )
 				if( AmountMined_ > 0.0f )
 				{
 					auto AmountMined = std::min( AmountMined_, Tick * MiningRate_ );
-					Mothership->addResources( AmountMined );
+					Mothership->addResources( AmountMined * 100.0f );
 					AmountMined_ -= AmountMined;
 				}
-
-				// TODO: notify.
-				Target_ = nullptr;
-				State_ = State::IDLE;
+				else
+				{
+					// TODO: notify.
+					Target_ = nullptr;
+					State_ = State::IDLE;
+				}
 			}
 		}
 
 		// Out of bounds.
-		if( Position.z() < -MaxExtents_ || Position.z() > MaxExtents_ )
+		BcF32 ZMax = MaxExtents_;
+		if( TargetPosition_.z() < -ZMax || TargetPosition_.z() > ZMax )
 		{
 			// TODO: notify.
 			Target_ = nullptr;
 			State_ = State::IDLE;
 
-			if( Position.z() < -MaxExtents_ )
+			if( Position.z() < -ZMax )
 			{
 				TargetPosition_ = MaVec3d( Position.x(), Position.y(), Position.z() + 8.0f );
 			}
 			else
 			{
 				TargetPosition_ = MaVec3d( Position.x(), Position.y(), Position.z() - 8.0f );
+			}
+		}
+
+		BcF32 XMax = MaxExtents_ * 1.5f;
+		if( TargetPosition_.x() < -XMax || TargetPosition_.x() > XMax )
+		{
+			// TODO: notify.
+			Target_ = nullptr;
+			State_ = State::IDLE;
+
+			if( Position.x() < -XMax )
+			{
+				TargetPosition_ = MaVec3d( Position.x() + 8.0f, Position.y(), Position.z() );
+			}
+			else
+			{
+				TargetPosition_ = MaVec3d( Position.x() - 8.0f, Position.y(), Position.z() );
 			}
 		}
 

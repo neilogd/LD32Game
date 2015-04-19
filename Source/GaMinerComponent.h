@@ -27,7 +27,7 @@ public:
 
 	MaVec3d getPosition() const { return getParentEntity()->getWorldPosition(); }
 
-	BcBool isFull( BcF32 Fraction ) const { return ( AmountMined_ ) > ( MaxCapacity_ * Fraction ); }
+	BcBool isFull( BcF32 Fraction ) const { return ( AmountMined_ ) >= ( MaxCapacity_ * Fraction ); }
 
 private:
 	BcF32 MaxVelocity_;

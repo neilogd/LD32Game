@@ -32,7 +32,7 @@ void GaGameComponent::StaticRegisterClass()
 	};
 
 	ReRegisterClass< GaGameComponent, Super >( Fields )
-		.addAttribute( new ScnComponentAttribute( -1 ) );
+		.addAttribute( new ScnComponentAttribute( -10 ) );
 }
 
 //////////////////////////////////////////////////////////////////////////

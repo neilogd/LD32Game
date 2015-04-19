@@ -23,6 +23,7 @@ struct GaUnitAction
 // GaUnitActionEvent
 struct GaUnitActionEvent : public EvtEvent< GaUnitActionEvent >
 {
+	BcU32 Cost_;
 	class GaUnitComponent* SourceUnit_;
 	class GaUnitComponent* TargetUnit_;
 };

@@ -30,10 +30,16 @@ public:
 private:
 	class ScnEntity* MinerEntity_;
 	BcF32 TotalResources_;
+	BcF32 TotalHull_;
 
 	MaVec3d TargetPosition_;	
 	MaQuat TargetRotation_;
 
+	class ScnCanvasComponent* Canvas_;
+	class ScnFontComponent* Font_;
+	class ScnViewComponent* View_;
+
+	GaMothershipComponent* Enemy_;
 	std::vector< class GaAsteroidComponent* > Asteroids_;
 	std::vector< class GaMinerComponent* > Miners_;
 
