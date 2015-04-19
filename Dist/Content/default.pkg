@@ -28,6 +28,13 @@
 				},
 
 				{
+					"type"					: "ScnCanvasComponent",
+					"noofvertices" 			: 8192,
+					"rendermask"			: 1,
+					"clear"					: true
+				},
+
+				{
 					"name" : "GameEntity",
 					"type" : "ScnEntity",
 

@@ -17,7 +17,7 @@ void GaAsteroidFieldComponent::StaticRegisterClass()
 {
 	ReField* Fields[] = 
 	{
-		new ReField( "AsteroidTemplates_", &GaAsteroidFieldComponent::AsteroidTemplates_, bcRFF_IMPORTER ),
+		new ReField( "AsteroidTemplates_", &GaAsteroidFieldComponent::AsteroidTemplates_, bcRFF_SHALLOW_COPY | bcRFF_IMPORTER ),
 		new ReField( "NoofAsteroids_", &GaAsteroidFieldComponent::NoofAsteroids_, bcRFF_IMPORTER ),
 		new ReField( "MinSize_", &GaAsteroidFieldComponent::MinSize_, bcRFF_IMPORTER ),
 		new ReField( "MaxSize_", &GaAsteroidFieldComponent::MaxSize_, bcRFF_IMPORTER ),

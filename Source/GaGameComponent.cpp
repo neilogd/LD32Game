@@ -3,8 +3,10 @@
 
 #include "System/Scene/Rendering/ScnDebugRenderComponent.h"
 #include "System/Scene/Rendering/ScnViewComponent.h"
+#include "System/Scene/Rendering/ScnCanvasComponent.h"
 #include "System/Scene/Physics/ScnPhysicsWorldComponent.h"
 #include "System/Scene/Physics/ScnPhysicsCollisionComponent.h"
+
 
 #include "System/Os/OsCore.h"
 
@@ -16,8 +18,10 @@ void GaGameComponent::StaticRegisterClass()
 {
 	ReField* Fields[] = 
 	{
-		new ReField( "MothershipEntity_", &GaGameComponent::MothershipEntity_, bcRFF_IMPORTER ),
+		new ReField( "MothershipEntity_", &GaGameComponent::MothershipEntity_, bcRFF_SHALLOW_COPY | bcRFF_IMPORTER ),
+		new ReField( "UIMaterial_", &GaGameComponent::MothershipEntity_, bcRFF_SHALLOW_COPY | bcRFF_IMPORTER ),
 
+		new ReField( "UIMaterialComponent_", &GaGameComponent::MothershipEntity_, bcRFF_TRANSIENT ),
 		new ReField( "View_", &GaGameComponent::View_, bcRFF_TRANSIENT ),
 		new ReField( "World_", &GaGameComponent::View_, bcRFF_TRANSIENT ),
 		new ReField( "SelectedUnit_", &GaGameComponent::SelectedUnit_, bcRFF_TRANSIENT ),
@@ -185,8 +189,11 @@ void GaGameComponent::onAttach( ScnEntityWeakRef Parent )
 			return evtRET_PASS;
 		} );
 
-	View_ = Parent->getComponentAnyParentByType< ScnViewComponent >();
-	World_ = Parent->getComponentAnyParentByType< ScnPhysicsWorldComponent >();
+
+
+	View_ = getComponentAnyParentByType< ScnViewComponent >();
+	World_ = getComponentAnyParentByType< ScnPhysicsWorldComponent >();
+	Canvas_ = getComponentAnyParentByType< ScnCanvasComponent >();
 
 	// Spawn motherships.
 	auto SceneEntity = getParentEntity()->getParentEntity();

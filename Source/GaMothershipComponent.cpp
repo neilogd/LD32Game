@@ -16,7 +16,7 @@ void GaMothershipComponent::StaticRegisterClass()
 {
 	ReField* Fields[] = 
 	{
-		new ReField( "MinerEntity_", &GaMothershipComponent::MinerEntity_, bcRFF_IMPORTER )
+		new ReField( "MinerEntity_", &GaMothershipComponent::MinerEntity_, bcRFF_SHALLOW_COPY | bcRFF_IMPORTER )
 	};
 
 	ReRegisterClass< GaMothershipComponent, Super >( Fields )

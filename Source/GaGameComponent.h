@@ -23,9 +23,12 @@ public:
 
 private:
 	class ScnEntity* MothershipEntity_;
+	class ScnMaterial* UIMaterial_;
+	class ScnMaterialComponent* UIMaterialComponent_;
 
 	class ScnViewComponent* View_;
 	class ScnPhysicsWorldComponent* World_;
+	class ScnCanvasComponent* Canvas_;
 
 	class GaUnitComponent* SelectedUnit_;
 
